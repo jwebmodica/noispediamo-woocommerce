@@ -1,0 +1,207 @@
+/*----------------- 
+Backend related CSS
+-----------------*/
+table.cspedisci{ 
+    border-collapse: collapse;
+    margin: 25px 0;
+    font-size: 0.9em;
+    font-family: sans-serif;
+    min-width: 400px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+    width:80%;
+}
+
+table.cspedisci thead tr {
+    background-color: #009879;
+    color: #ffffff;
+    text-align: left;
+    font-size:14px; text-transform:uppercase;
+}
+
+table.cspedisci th,
+table.cspedisci td {
+    padding: 12px 15px;
+}
+table.cspedisci tbody tr {
+    border-bottom: 1px solid #dddddd;
+}
+
+table.cspedisci tbody tr:nth-of-type(even) {
+    background-color: #f3f3f3;
+}
+
+table.cspedisci tbody tr:last-of-type {
+    border-bottom: 2px solid #009879;
+}
+
+.ui-datepicker {
+	background: #fff;
+	font-size: 13px;
+	left: 0;
+	border: 1px solid #ccd0d4;
+	line-height: 34px;
+	border-top-color: #007cba;
+}
+.ui-datepicker table{
+	border-spacing: 0;
+	border-collapse: collapse;
+}
+.ui-datepicker a,
+.ui-datepicker .ui-datepicker-calendar span{
+	cursor: pointer;
+	float: left;
+	height: 34px;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	text-align: center;
+	width: 34px;
+	border:0;
+	color: #5f5f5f;
+	text-decoration:none;
+}
+.ui-datepicker .ui-datepicker-calendar span {
+	color: #bbb;
+	cursor: default;
+	font-weight: normal;
+	-webkit-font-smoothing: antialiased;
+}
+.ui-datepicker a:hover{
+	background-color: #f9f9f9;
+}
+.ui-datepicker a:focus{
+	box-shadow:none;
+}
+.ui-datepicker a.ui-state-highlight {
+	color: #007cba;
+}
+.ui-datepicker a.ui-state-highlight:hover {
+	background-color: #cce5ff;
+}
+.ui-datepicker a.ui-state-active {
+	font-weight: 600;
+	color: #333;
+}
+.ui-datepicker-header{
+	position:relative;
+	text-align:center;
+}
+.ui-datepicker-prev, .ui-datepicker-next{
+	position: absolute;
+}
+.ui-datepicker-prev{
+	left: 0;
+}
+.ui-datepicker-next{
+	right: 0;
+}
+.ui-datepicker-prev span, .ui-datepicker-next span{
+	display:none;
+}
+.ui-datepicker-prev:before, .ui-datepicker-next:before{
+	position: absolute;
+	display: block;
+	top: 0;
+	left: 0;
+	content: "‹";
+	text-indent: 0;
+	width: 34px;
+	text-align: center;
+	font-size: 16px;
+	-webkit-font-smoothing: antialiased;
+}
+.ui-datepicker-next:before{
+	content: "›";
+	top:0;
+	right:0;
+	left:auto;
+}
+.ui-datepicker-prev.ui-state-disabled,
+.ui-datepicker-prev.ui-state-disabled:hover,
+.ui-datepicker-next.ui-state-disabled,
+.ui-datepicker-next.ui-state-disabled:hover{
+	background-color: #fff;
+	cursor:default;
+	color:#ccc;
+}
+
+/* Multiple packages styling */
+.pacchi-container {
+	margin-bottom: 10px;
+}
+
+.pacco-row {
+	background-color: #f9f9f9;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	padding: 10px;
+	margin-bottom: 10px;
+}
+
+.pacco-row:last-child {
+	margin-bottom: 0;
+}
+
+.pacco-row strong {
+	color: #2271b1;
+	font-size: 13px;
+}
+
+.pacco-row input[type="text"] {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 5px 8px;
+	font-size: 13px;
+}
+
+.rimuovi-pacco {
+	background-color: #d63638;
+	border-color: #d63638;
+	color: #fff;
+	font-size: 11px;
+	padding: 2px 8px;
+	height: auto;
+	line-height: 1.5;
+}
+
+.rimuovi-pacco:hover {
+	background-color: #b32d2e;
+	border-color: #b32d2e;
+	color: #fff;
+}
+
+.aggiungi-pacco {
+	background-color: #2271b1;
+	border-color: #2271b1;
+	color: #fff;
+}
+
+.aggiungi-pacco:hover {
+	background-color: #135e96;
+	border-color: #135e96;
+	color: #fff;
+}
+
+/* Address input fields styling */
+.destinatario-info input[type="text"],
+.indirizzo-info input[type="text"],
+.indirizzo-info textarea {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 5px 8px;
+	font-size: 13px;
+	box-sizing: border-box;
+}
+
+.destinatario-info input[type="text"]:focus,
+.indirizzo-info input[type="text"]:focus,
+.indirizzo-info textarea:focus {
+	border-color: #2271b1;
+	outline: none;
+	box-shadow: 0 0 0 1px #2271b1;
+}
+
+.destinatario-info,
+.indirizzo-info {
+	max-width: 100%;
+}
