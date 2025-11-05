@@ -19,6 +19,11 @@ jQuery(document).ready(function($) {
         newPacco.find('input').val('');
         newPacco.find('.rimuovi-pacco').show();
 
+        // Add spacing between packages
+        newPacco.css('margin-top', '10px');
+        newPacco.css('padding-top', '10px');
+        newPacco.css('border-top', '1px solid #ddd');
+
         // Append to container
         container.append(newPacco);
 

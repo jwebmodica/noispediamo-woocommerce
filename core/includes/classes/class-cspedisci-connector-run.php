@@ -174,6 +174,12 @@ class Cspedisci_Connector_Run{
 			wp_send_json_error( array( 'issue' => 'Impostazioni non trovate. Configura il plugin.' ) );
 		}
 
+		// Validate required mittente fields
+		if ( empty( $posts->nome ) || empty( $posts->indirizzo ) || empty( $posts->cap ) ||
+		     empty( $posts->citta ) || empty( $posts->prov ) || empty( $posts->email ) ) {
+			wp_send_json_error( array( 'issue' => 'Dati del mittente incompleti. Vai su Impostazioni e compila tutti i campi obbligatori (Nome, Indirizzo, CAP, Città, Provincia, Email).' ) );
+		}
+
 		$username = $posts->email;
 		$password = $posts->password;
 		$basicauth = base64_encode( $username . ':' . $password );
