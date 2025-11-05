@@ -145,7 +145,7 @@ function khn_datepicker_css_and_js() {
 
 
 function test_plugin_setup_menu(){
-    add_menu_page( 'Test Plugin Page', 'Noispediamo', 'manage_options', 'cspedisci-plugin', 'test_init' );
+    add_menu_page( 'NoiSpediamo Connector', 'NoiSpediamo', 'manage_options', 'cspedisci-plugin', 'test_init', 'dashicons-products', 56 );
        add_submenu_page(
         'cspedisci-plugin',
         'Impostazioni', //page title
@@ -216,6 +216,14 @@ function test_init(){
     }
     ?>
 
+    <!-- Page Header -->
+    <div class="wrap">
+        <h1 style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+            <span class="dashicons dashicons-products" style="font-size: 32px; width: 32px; height: 32px;"></span>
+            NoiSpediamo Connector
+        </h1>
+    </div>
+
     <!-- Filter Section -->
     <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
         <div style="margin-bottom: 15px;">
@@ -241,7 +249,7 @@ function test_init(){
                 </div>
                 <div style="flex: 1; min-width: 200px;">
                     <label style="display: block; font-size: 12px; color: #666; margin-bottom: 5px;">ID Ordine</label>
-                    <input type="text" id="filter_order_id" placeholder="cs12345 o #1234" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                    <input type="text" id="filter_order_id" placeholder="12345" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
                     <small style="font-size: 11px; color: #999;">Cerca per numero ordine</small>
                 </div>
             </div>
@@ -290,7 +298,7 @@ foreach ($orders as $idordine) {
     ?>
 
     <!-- Order Card -->
-    <div id='order-card-<?php echo $idordine; ?>' style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+    <div id='order-card-<?php echo $idordine; ?>' class="order-card" data-order-id="<?php echo $idordine; ?>" data-order-date="<?php echo $order_date; ?>" style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
 
         <!-- Order Header -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid #f5f5f5;">
@@ -321,11 +329,9 @@ foreach ($orders as $idordine) {
             </div>
 
             <!-- Read-only address display -->
-            <div class="address-display" style="font-size: 13px; color: #666;">
+            <div class="address-display" style="font-size: 13px; color: #666; line-height: 1.6;">
                 <div style="margin-bottom: 3px;"><strong><?php echo esc_html(trim($ordine['first_name'] . ' ' . $ordine['last_name'])); ?></strong></div>
-                <div><?php echo esc_html($ordine['address_1']); ?></div>
-                <div><?php echo esc_html($ordine['city'] . ', ' . $ordine['state'] . ' ' . $ordine['postcode']); ?></div>
-                <div>Telefono: <?php echo esc_html($billing_phone); ?></div>
+                <div><?php echo esc_html($ordine['address_1'] . ', ' . $ordine['city'] . ', ' . $ordine['state'] . ' ' . $ordine['postcode'] . ' • Tel: ' . $billing_phone); ?></div>
             </div>
 
             <!-- Editable address form (hidden by default) -->
