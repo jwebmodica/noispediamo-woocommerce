@@ -5,13 +5,13 @@
  * @package       CSPEDISCI
  * @author        Jweb
  * @license       gplv2
- * @version       1.1.13
+ * @version       1.1.14
  *
  * @wordpress-plugin
  * Plugin Name:   NoiSpediamo Connector
  * Plugin URI:    https://www.noispediamo.it
  * Description:   Invia i tuoi ordini woocommerce a Noispediamo.it tramite cspedisci-connector
- * Version:       1.1.13
+ * Version:       1.1.14
  * Author:        Jweb
  * Author URI:    https://www.jwebmodica.it
  * Text Domain:   cspedisci-connector
@@ -34,7 +34,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 define( 'CSPEDISCI_NAME',			'NoiSpediamo Connector' );
 
 // Plugin version
-define( 'CSPEDISCI_VERSION',		'1.1.13' );
+define( 'CSPEDISCI_VERSION',		'1.1.14' );
 
 // Plugin Root File
 define( 'CSPEDISCI_PLUGIN_FILE',	__FILE__ );
