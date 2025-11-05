@@ -1,12 +1,28 @@
 /*------------------------
 Backend related javascript
 ------------------------*/
+
+// Filter functions
+function applyFilters() {
+    var filterDate = document.getElementById('filter_date').value;
+    var filterOrderId = document.getElementById('filter_order_id').value;
+
+    // TODO: Implement filtering logic
+    alert('Filtri applicati: Data=' + filterDate + ', ID=' + filterOrderId);
+}
+
+function clearFilters() {
+    document.getElementById('filter_date').value = '';
+    document.getElementById('filter_order_id').value = '';
+    // TODO: Reset the order list
+}
+
 jQuery(document).ready(function($) {
 
     // Handle add package button
     $(document).on('click', '.aggiungi-pacco', function(e) {
         e.preventDefault();
-        var container = $(this).closest('td').find('.pacchi-container');
+        var container = $(this).siblings('.pacchi-container');
         var paccoCount = container.find('.pacco-row').length;
         var newIndex = paccoCount;
 
@@ -88,33 +104,33 @@ jQuery(document).ready(function($) {
 
     $(document).on('click', '.invia-ordine-btn', function(e) {
         e.preventDefault();
-        var $tr = $(this).closest('tr');
-        var ordineid = $tr.find('.rigaordine').text();
-        var ritiro = $tr.find('.ritiro').val();
+        var $card = $(this).closest('[id^="order-card-"]');
+        var ordineid = $card.find('.rigaordine').val();
+        var ritiro = $card.find('.ritiro').val();
 
-        // Collect destination address data
+        // Collect destination address data (from hidden fields)
         var destinatario = {
-            nome: $tr.find('.dest-nome').val().trim(),
-            indirizzo: $tr.find('.dest-indirizzo').val().trim(),
-            civico: $tr.find('.dest-civico').val().trim(),
-            cap: $tr.find('.dest-cap').val().trim(),
-            citta: $tr.find('.dest-citta').val().trim(),
-            prov: $tr.find('.dest-prov').val().trim(),
-            email: $tr.find('.dest-email').val().trim(),
-            telefono: $tr.find('.dest-telefono').val().trim(),
-            note: $tr.find('.dest-note').val().trim()
+            nome: $card.find('.dest-nome').val().trim(),
+            indirizzo: $card.find('.dest-indirizzo').val().trim(),
+            civico: $card.find('.dest-civico').val().trim(),
+            cap: $card.find('.dest-cap').val().trim(),
+            citta: $card.find('.dest-citta').val().trim(),
+            prov: $card.find('.dest-prov').val().trim(),
+            email: $card.find('.dest-email').val().trim(),
+            telefono: $card.find('.dest-telefono').val().trim(),
+            note: $card.find('.dest-note').val().trim()
         };
 
         // Validate destination data
         if (!destinatario.nome || !destinatario.indirizzo || !destinatario.cap || !destinatario.citta || !destinatario.prov) {
-            alert('Compila tutti i campi obbligatori del destinatario (Nome, Indirizzo, CAP, Città, Provincia)');
+            alert('Dati destinatario incompleti');
             return;
         }
 
         // Collect all packages for this order
         var pacchi = [];
         var valid = true;
-        $tr.find('.pacco-row').each(function() {
+        $card.find('.pacco-row').each(function() {
             var peso = $(this).find('.peso').val();
             var alt = $(this).find('.alt').val();
             var largh = $(this).find('.largh').val();
@@ -161,7 +177,8 @@ jQuery(document).ready(function($) {
                 if (!response.success) {
                     // Error case
                     var issue = response.data && response.data.issue ? response.data.issue : 'Errore sconosciuto';
-                    $("#soprafeedback").after('<div id="cfeedback" class="notice notice-error is-dismissible"><p>' + issue + '</p><button type="button" class="notice-dismiss"><span class="screen-reader-text">Dismiss this notice.</span></button></div>');
+                    $('html, body').animate({ scrollTop: 0 }, 300);
+                    $('body').prepend('<div id="cfeedback" class="notice notice-error is-dismissible"><p>' + issue + '</p><button type="button" class="notice-dismiss"><span class="screen-reader-text">Dismiss this notice.</span></button></div>');
                     $(".notice-dismiss").click(function(e) {
                         var t = $("#cfeedback");
                         e.preventDefault();
@@ -175,11 +192,12 @@ jQuery(document).ready(function($) {
                 } else {
                     // Success case
                     var objJSON = response.data;
-                    var trordine = "#trordine-" + objJSON.idordine;
+                    var orderCard = "#order-card-" + objJSON.idordine;
                     var btninvia = "#invia-" + objJSON.idordine;
-                    $(trordine).find('.nordine').append(objJSON.id);
-                    $(btninvia).remove();
-                    $("#soprafeedback").after('<div id="cfeedback" class="notice notice-success is-dismissible"><p>Spedizione inviata con successo. Se hai impostato come pagamento "Paga con Credito" la spedizione è già inviata. Altrimenti fai login nella tua area privata e paga la spedizione: Spedizione nr ' + objJSON.id + '</p><button type="button" class="notice-dismiss"><span class="screen-reader-text">Dismiss this notice.</span></button></div>');
+                    $(orderCard).find('.nordine').html('<div style="margin-top: 15px; padding: 10px; background: #d4edda; color: #155724; border-radius: 4px; font-size: 13px;">✅ Spedizione nr ' + objJSON.id + ' inviata con successo</div>');
+                    $(btninvia).prop('disabled', true).text('Inviato').css('opacity', '0.5');
+                    $('html, body').animate({ scrollTop: 0 }, 300);
+                    $('body').prepend('<div id="cfeedback" class="notice notice-success is-dismissible"><p>Spedizione inviata con successo. Se hai impostato come pagamento "Paga con Credito" la spedizione è già inviata. Altrimenti fai login nella tua area privata e paga la spedizione: Spedizione nr ' + objJSON.id + '</p><button type="button" class="notice-dismiss"><span class="screen-reader-text">Dismiss this notice.</span></button></div>');
                     $(".notice-dismiss").click(function(e) {
                         var t = $("#cfeedback");
                         e.preventDefault();

@@ -206,8 +206,6 @@ function test_init(){
         $orders_limit = 10;
     }
 
-    echo "<h1 id='soprafeedback'>NoiSpediamo Connector</h1><p>Invia le tue spedizioni direttamente a Noispediamo con 1 click</p>";
-
     // Show warning if settings are not configured
     if (!$settings_configured) {
         echo '<div class="notice notice-error" style="padding: 15px; margin: 20px 0; border-left: 4px solid #dc3232;">';
@@ -217,15 +215,43 @@ function test_init(){
         echo '</div>';
     }
     ?>
-    <div style="margin-bottom: 20px;">
-        <label for="orders_limit_select" style="font-weight: 600;">Mostra ordini: </label>
-        <select id="orders_limit_select" name="orders_limit" onchange="window.location.href='?page=cspedisci-plugin&orders_limit=' + this.value;">
-            <option value="10" <?php selected($orders_limit, 10); ?>>10</option>
-            <option value="25" <?php selected($orders_limit, 25); ?>>25</option>
-            <option value="50" <?php selected($orders_limit, 50); ?>>50</option>
-            <option value="100" <?php selected($orders_limit, 100); ?>>100</option>
-        </select>
+
+    <!-- Filter Section -->
+    <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div style="margin-bottom: 15px;">
+            <label for="orders_limit_select" style="font-weight: 600; margin-right: 10px;">Mostra</label>
+            <select id="orders_limit_select" name="orders_limit" onchange="window.location.href='?page=cspedisci-plugin&orders_limit=' + this.value;" style="padding: 5px 10px; border-radius: 4px; border: 1px solid #ddd;">
+                <option value="10" <?php selected($orders_limit, 10); ?>>10</option>
+                <option value="25" <?php selected($orders_limit, 25); ?>>25</option>
+                <option value="50" <?php selected($orders_limit, 50); ?>>50</option>
+                <option value="100" <?php selected($orders_limit, 100); ?>>100</option>
+            </select>
+            <span style="margin-left: 5px;">ordini da spedire per pagina</span>
+        </div>
+
+        <div style="border-top: 1px solid #eee; padding-top: 15px;">
+            <h3 style="margin-top: 0; font-size: 14px; display: flex; align-items: center; gap: 5px;">
+                🔍 Filtri Ricerca
+            </h3>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 200px;">
+                    <label style="display: block; font-size: 12px; color: #666; margin-bottom: 5px;">Data ordine</label>
+                    <input type="date" id="filter_date" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                    <small style="font-size: 11px; color: #999;">Seleziona la data degli ordini</small>
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                    <label style="display: block; font-size: 12px; color: #666; margin-bottom: 5px;">ID Ordine</label>
+                    <input type="text" id="filter_order_id" placeholder="cs12345 o #1234" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                    <small style="font-size: 11px; color: #999;">Cerca per numero ordine</small>
+                </div>
+            </div>
+            <div style="margin-top: 15px; display: flex; gap: 10px;">
+                <button type="button" class="button button-primary" onclick="applyFilters()" style="padding: 6px 15px;">Applica Filtri</button>
+                <button type="button" class="button" onclick="clearFilters()" style="padding: 6px 15px;">Cancella Filtri</button>
+            </div>
+        </div>
     </div>
+
     <?php
     $query = new WC_Order_Query( array(
     'limit' => $orders_limit,
@@ -235,109 +261,139 @@ function test_init(){
     'status' => 'wc-processing',
 ) );
 $orders = $query->get_orders();
-   // print_r($orders);
-  //  $order = wc_get_order();
-  echo "<table class='cspedisci'><thead><tr><th>Id ordine</th><th>Destinatario</th><th>Indirizzo Spedizione</th><th>Informazioni Pacchi</th><th>Opzioni</th><th>Stato</th><tr></thead><tbody>";
-    foreach ($orders as $idordine) {
-         $order = wc_get_order($idordine);
-         $ordine=$order->get_address('shipping');
-         $billing_email = $order->get_billing_email();
-         $billing_phone = $order->get_billing_phone();
-    echo "<tr id='trordine-$idordine'><td class='rigaordine' style='vertical-align: top;'>$idordine</td><td style='vertical-align: top;'>"; ?>
 
-    <div class="destinatario-info">
-        <div style="margin-bottom: 8px;">
-            <label style="display: block; font-size: 11px; color: #666; margin-bottom: 3px;">Nome completo</label>
-            <input type="text" class="dest-nome" value="<?php echo esc_attr(trim($ordine['company'] . ' ' . $ordine['first_name'] . ' ' . $ordine['last_name'])); ?>" style="width: 100%; padding: 6px;">
-        </div>
-        <div style="margin-bottom: 8px;">
-            <label style="display: block; font-size: 11px; color: #666; margin-bottom: 3px;">Email</label>
-            <input type="text" class="dest-email" value="<?php echo esc_attr($billing_email); ?>" style="width: 100%; padding: 6px;">
-        </div>
-        <div style="margin-bottom: 8px;">
-            <label style="display: block; font-size: 11px; color: #666; margin-bottom: 3px;">Telefono</label>
-            <input type="text" class="dest-telefono" value="<?php echo esc_attr($billing_phone); ?>" style="width: 100%; padding: 6px;">
-        </div>
-    </div>
+if (empty($orders)) {
+    echo '<div style="background: white; border-radius: 8px; padding: 40px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">';
+    echo '<p style="font-size: 16px; color: #666;">📦 Nessun ordine da spedire</p>';
+    echo '</div>';
+} else {
+    echo '<div style="margin-bottom: 15px; font-weight: 600;">🚚 Ordini da Spedire (' . count($orders) . ')</div>';
+    echo '<div style="font-size: 13px; color: #666; margin-bottom: 20px;">Compila i dettagli di spedizione per gli ordini non evasi.</div>';
+}
 
-    </td><td style='vertical-align: top;'>
+foreach ($orders as $idordine) {
+    $order = wc_get_order($idordine);
+    $ordine = $order->get_address('shipping');
+    $billing_email = $order->get_billing_email();
+    $billing_phone = $order->get_billing_phone();
+    $order_date = $order->get_date_created()->format('d/m/Y');
+    $order_total = $order->get_total();
+    ?>
 
-    <div class="indirizzo-info">
-        <div style="margin-bottom: 8px;">
-            <label style="display: block; font-size: 11px; color: #666; margin-bottom: 3px;">Indirizzo</label>
-            <div style="display: flex; gap: 5px;">
-                <input type="text" class="dest-indirizzo" value="<?php echo esc_attr($ordine['address_1']); ?>" style="flex: 1; padding: 6px;">
-                <input type="text" class="dest-civico" placeholder="N." value="" style="width: 60px; padding: 6px;">
+    <!-- Order Card -->
+    <div id='order-card-<?php echo $idordine; ?>' style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+
+        <!-- Order Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid #f5f5f5;">
+            <div>
+                <span style="font-size: 14px; color: #666;">📦</span>
+                <strong style="font-size: 15px; margin-left: 5px;">CS<?php echo $idordine; ?></strong>
+            </div>
+            <div style="text-align: right; font-size: 13px; color: #666;">
+                <?php echo $order_date; ?>
             </div>
         </div>
-        <div style="margin-bottom: 8px; display: flex; gap: 5px;">
-            <div style="flex: 2;">
-                <label style="display: block; font-size: 11px; color: #666; margin-bottom: 3px;">Città</label>
-                <input type="text" class="dest-citta" value="<?php echo esc_attr($ordine['city']); ?>" style="width: 100%; padding: 6px;">
-            </div>
-            <div style="flex: 1;">
-                <label style="display: block; font-size: 11px; color: #666; margin-bottom: 3px;">CAP</label>
-                <input type="text" class="dest-cap" value="<?php echo esc_attr($ordine['postcode']); ?>" style="width: 100%; padding: 6px;">
-            </div>
-            <div style="width: 60px;">
-                <label style="display: block; font-size: 11px; color: #666; margin-bottom: 3px;">Prov</label>
-                <input type="text" class="dest-prov" value="<?php echo esc_attr($ordine['state']); ?>" style="width: 100%; padding: 6px;">
+
+        <!-- Customer Info -->
+        <div style="margin-bottom: 15px;">
+            <div style="font-weight: 600; font-size: 14px; margin-bottom: 5px;">
+                <?php echo esc_html(trim($ordine['company'] . ' ' . $ordine['first_name'] . ' ' . $ordine['last_name'])); ?> • <?php echo wc_price($order_total); ?>
             </div>
         </div>
-        <div>
-            <label style="display: block; font-size: 11px; color: #666; margin-bottom: 3px;">Note per il corriere</label>
-            <textarea class="dest-note" rows="2" style="width: 100%; padding: 6px; resize: vertical;"><?php echo esc_attr($order->get_customer_note()); ?></textarea>
-        </div>
-    </div>
 
-    </td><td style='vertical-align: top;'>"; ?>
-    <input class="ordineid" name="idordine" type="hidden" value="<?php echo $idordine;?>">
-
-    <div class="pacchi-container" style="background: #f9f9f9; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
-        <div class="pacco-row" data-pacco-index="0">
-            <div style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
-                <strong style="font-size: 12px;">Pacco #1</strong>
-                <button type="button" class="button button-small rimuovi-pacco" style="display:none; font-size: 11px; padding: 2px 8px;">Rimuovi</button>
+        <!-- Shipping Address -->
+        <div style="margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 10px;">
+                <span style="font-size: 14px;">📍</span>
+                <strong style="font-size: 13px;">Indirizzo di spedizione:</strong>
             </div>
-            <div style="display: flex; gap: 5px;">
-                <div style="flex: 1;">
-                    <label style="display: block; font-size: 10px; color: #666; margin-bottom: 2px;">Peso (kg)</label>
-                    <input type="text" class="peso" name="peso[]" required="required" style="width: 100%; padding: 6px;">
+            <div style="font-size: 13px; color: #666;">
+                <?php
+                $full_address = trim($ordine['address_1']) . ', ' . trim($ordine['city']) . ', ' . trim($ordine['state']) . ' ' . trim($ordine['postcode']) . ', Italy';
+                echo esc_html($full_address);
+                ?>
+            </div>
+        </div>
+
+        <!-- Packages Section -->
+        <input class="ordineid rigaordine" name="idordine" type="hidden" value="<?php echo $idordine;?>">
+
+        <!-- Hidden destination fields (required for backend) -->
+        <input type="hidden" class="dest-nome" value="<?php echo esc_attr(trim($ordine['company'] . ' ' . $ordine['first_name'] . ' ' . $ordine['last_name'])); ?>">
+        <input type="hidden" class="dest-email" value="<?php echo esc_attr($billing_email); ?>">
+        <input type="hidden" class="dest-telefono" value="<?php echo esc_attr($billing_phone); ?>">
+        <input type="hidden" class="dest-indirizzo" value="<?php echo esc_attr($ordine['address_1']); ?>">
+        <input type="hidden" class="dest-civico" value="">
+        <input type="hidden" class="dest-citta" value="<?php echo esc_attr($ordine['city']); ?>">
+        <input type="hidden" class="dest-cap" value="<?php echo esc_attr($ordine['postcode']); ?>">
+        <input type="hidden" class="dest-prov" value="<?php echo esc_attr($ordine['state']); ?>">
+        <input type="hidden" class="dest-note" value="<?php echo esc_attr($order->get_customer_note()); ?>">
+
+        <div style="background: #f7f9fc; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
+            <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 12px;">
+                <span style="font-size: 14px;">📦</span>
+                <strong style="font-size: 13px;">Pacchi da spedire (1)</strong>
+            </div>
+
+            <div class="pacchi-container">
+                <div class="pacco-row" data-pacco-index="0" style="margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div style="font-size: 12px; font-weight: 600;">Pacco 1 di 1</div>
+                        <button type="button" class="button button-small rimuovi-pacco" style="display:none; font-size: 11px; padding: 2px 8px;">Rimuovi</button>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                        <div>
+                            <label style="display: block; font-size: 11px; color: #666; margin-bottom: 4px;">Peso (kg)</label>
+                            <input type="text" class="peso" name="peso[]" placeholder="9.0" required="required" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 11px; color: #666; margin-bottom: 4px;">Largh (cm)</label>
+                            <input type="text" class="largh" name="largh[]" placeholder="30" required="required" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 11px; color: #666; margin-bottom: 4px;">Alt (cm)</label>
+                            <input type="text" class="alt" name="alt[]" placeholder="22" required="required" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 11px; color: #666; margin-bottom: 4px;">Prof (cm)</label>
+                            <input type="text" class="prof" name="prof[]" placeholder="40" required="required" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                        </div>
+                    </div>
                 </div>
-                <div style="flex: 1;">
-                    <label style="display: block; font-size: 10px; color: #666; margin-bottom: 2px;">Larg (cm)</label>
-                    <input type="text" class="largh" name="largh[]" required="required" style="width: 100%; padding: 6px;">
-                </div>
-                <div style="flex: 1;">
-                    <label style="display: block; font-size: 10px; color: #666; margin-bottom: 2px;">Alt (cm)</label>
-                    <input type="text" class="alt" name="alt[]" required="required" style="width: 100%; padding: 6px;">
-                </div>
-                <div style="flex: 1;">
-                    <label style="display: block; font-size: 10px; color: #666; margin-bottom: 2px;">Prof (cm)</label>
-                    <input type="text" class="prof" name="prof[]" required="required" style="width: 100%; padding: 6px;">
-                </div>
+            </div>
+
+            <button type="button" class="button button-small aggiungi-pacco" style="font-size: 11px; padding: 4px 12px; margin-top: 5px;">+ Aggiungi Pacco</button>
+        </div>
+
+        <!-- Shipping Options -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+            <div>
+                <label style="display: block; font-size: 12px; font-weight: 600; color: #333; margin-bottom: 5px;">Data ritiro</label>
+                <input name="ritiro" class="ritiro my-datepicker" required="required" type="text" placeholder="06/11/2025" style="width:100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+            </div>
+            <div>
+                <label style="display: block; font-size: 12px; font-weight: 600; color: #333; margin-bottom: 5px;">Corriere</label>
+                <select style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                    <option>POSTE DELIVERY (1-3 gg)</option>
+                </select>
             </div>
         </div>
+
+        <!-- Action Button -->
+        <div style="text-align: right;">
+            <?php if ($settings_configured): ?>
+                <button type="button" class="button button-primary invia-ordine-btn" id="invia-<?php echo $idordine;?>" style="padding: 8px 20px; font-size: 13px;">Invia</button>
+            <?php else: ?>
+                <button type="button" class="button" style="opacity: 0.5; cursor: not-allowed; padding: 8px 20px; font-size: 13px;" title="Configura prima le impostazioni del mittente" onclick="return false;">Invia</button>
+            <?php endif; ?>
+        </div>
+
+        <div class="nordine"></div>
     </div>
+    <!-- End Order Card -->
 
-    <button type="button" class="button button-small aggiungi-pacco" style="font-size: 11px; padding: 4px 10px;">+ Aggiungi Pacco</button>
-
-    <div style="margin-top: 10px;">
-        <label style="display: block; font-size: 11px; color: #666; margin-bottom: 3px;">Data ritiro</label>
-        <input name="ritiro" class="ritiro my-datepicker" required="required" type="text" style="width:100%; padding: 6px;">
-    </div>
-
-    </td><td>
-        <?php if ($settings_configured): ?>
-            <a class="button button-secondary invia-ordine-btn" id="invia-<?php echo $idordine;?>" href="">Invia Ordine</a>
-        <?php else: ?>
-            <a class="button button-secondary" style="opacity: 0.5; cursor: not-allowed;" title="Configura prima le impostazioni del mittente" onclick="return false;">Invia Ordine</a>
-        <?php endif; ?>
-    </td>
     <?php
-   //     print_r($order->get_address('shipping'));
-    }
-    echo "<td><span class=\"nordine\"></span></td></tr></tbody></table>";
+}
 }
 
  
