@@ -5,13 +5,13 @@
  * @package       CSPEDISCI
  * @author        Jweb
  * @license       gplv2
- * @version       1.1.17
+ * @version       2.0.0
  *
  * @wordpress-plugin
  * Plugin Name:   NoiSpediamo Connector
  * Plugin URI:    https://www.noispediamo.it
  * Description:   Invia i tuoi ordini woocommerce a Noispediamo.it tramite cspedisci-connector
- * Version:       1.1.17
+ * Version:       2.0.0
  * Author:        Jweb
  * Author URI:    https://www.jwebmodica.it
  * Text Domain:   cspedisci-connector
@@ -34,7 +34,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 define( 'CSPEDISCI_NAME',			'NoiSpediamo Connector' );
 
 // Plugin version
-define( 'CSPEDISCI_VERSION',		'1.1.17' );
+define( 'CSPEDISCI_VERSION',		'2.0.0' );
 
 // Plugin Root File
 define( 'CSPEDISCI_PLUGIN_FILE',	__FILE__ );
@@ -521,6 +521,49 @@ function cspedisci_settings(){
                 array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d'),
                 array('%d')
             );
+
+            // Automatically refresh corrieri list after saving settings
+            $username = sanitize_email( $_POST['email'] );
+            $password = sanitize_text_field( $_POST['password'] );
+
+            if ( !empty( $username ) && !empty( $password ) ) {
+                $tablecorrieri = $wpdb->prefix . 'cspedisci_corrieri';
+                $basicauth = base64_encode( $username . ':' . $password );
+
+                // Make API call to get corrieri
+                $response = wp_remote_get( 'https://ordini.noispediamo.it/cspedisci-api/spedizione', array(
+                    'timeout' => 30,
+                    'headers' => array(
+                        'Content-Type' => 'application/json',
+                        'Authorization' => 'Basic ' . $basicauth
+                    )
+                ) );
+
+                if ( ! is_wp_error( $response ) ) {
+                    $body = wp_remote_retrieve_body( $response );
+                    $risposta = json_decode( $body, true );
+
+                    if ( isset( $risposta['errors'] ) && $risposta['errors'] == 0 ) {
+                        // Truncate existing carriers
+                        $wpdb->query( "TRUNCATE TABLE $tablecorrieri" );
+
+                        // Insert new carriers
+                        if ( isset( $risposta['corrieri'] ) && is_array( $risposta['corrieri'] ) ) {
+                            foreach ( $risposta['corrieri'] as $corriere ) {
+                                $wpdb->insert(
+                                    $tablecorrieri,
+                                    array(
+                                        'id' => absint( $corriere['id_corriere'] ),
+                                        'corriere' => sanitize_text_field( $corriere['nome'] ),
+                                        'tconsegna' => sanitize_text_field( $corriere['tconsegna'] ) . ' gg'
+                                    ),
+                                    array( '%d', '%s', '%s' )
+                                );
+                            }
+                        }
+                    }
+                }
+            }
         }
     	
     	
@@ -534,131 +577,154 @@ function cspedisci_settings(){
    // Echo the title of the most commented post
 ?>
     <div class="wrap">
-    <h2>NoiSpediamo Connector - Impostazioni e Guida</h2>
-    <p>Per poter iniziare ad inviare le tue spedizioni ti servirà configurare il plugin inserendo tutte le voci richieste.</p>
-    <form action="" method="post">
+        <h1 style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <span class="dashicons dashicons-admin-settings" style="font-size: 32px; width: 32px; height: 32px;"></span>
+            NoiSpediamo Connector - Impostazioni
+        </h1>
+        <p style="font-size: 14px; color: #666; margin-bottom: 30px;">Per poter iniziare ad inviare le tue spedizioni ti servirà configurare il plugin inserendo tutte le voci richieste.</p>
+
+    <form action="" method="post" style="max-width: 900px;">
         <?php wp_nonce_field( 'cspedisci_save_settings', 'cspedisci_settings_nonce' ); ?>
-        <table class="form-table">
-            <tr>
-                <th scope="row">Login<br><span class="description" style="font-weight:normal">Credenziali di accesso alla tua area privata Noispediamo.it</span></th>
-                <td>
-                    <fieldset>
-                        <label>
-                        <div><input name="email" type="text" id="email" value="<?php echo (isset( $posts->email) &&  $posts->email != '') ?  $posts->email : ''; ?>"/><br>
-                        <span class="description">Username: </span></div><div>
-                           <input name="password" type="password" id="password" value="<?php echo (isset( $posts->password) &&  $posts->password != '') ?  $posts->password : ''; ?>"/><br><span class="description">Password: </span></div>
-                        </label>
-                        
-                    </fieldset>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row">Nome Mittente</th>
-                <td>
-                    <fieldset>
-                        <label>
-                             <input style="width:300px" name="nome" type="text" id="nome" value="<?php echo (isset( $posts->nome) &&  $posts->nome != '') ?  $posts->nome : ''; ?>"/>
-                        </label>
-                        <br />
-                            <span class="description">Verrà usato come mittente di tutti gli ordini inviati</span>
-                    </fieldset>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row">Indirizzo</th>
-                <td>
-                    <fieldset>
-                        <label>
-                        <div style="display:inline-block;">
-                             <input style="width:300px" name="indirizzo" type="text" id="indirizzo" value="<?php echo (isset( $posts->indirizzo) &&  $posts->indirizzo != '') ?  $posts->indirizzo : ''; ?>"/>
-                            <br />
-                            <span class="description">Via/Piazza etc</span>
-                        </div>
-                         <div style="display:inline-block;">
-                             <input style="width:100px" name="civico" type="text" id="civico" value="<?php echo (isset( $posts->civico) &&  $posts->civico != '') ?  $posts->civico : ''; ?>"/>
-                            <br />
-                            <span class="description">N. civico</span>
-                        </div>
-                        <div style="display:inline-block;">
-                             <input name="citta" type="text" id="citta" value="<?php echo (isset( $posts->citta) &&  $posts->citta != '') ?  $posts->citta : ''; ?>"/>
-                            <br />
-                            <span class="description">Città</span>
-                        </div>
-                        <div style="display:inline-block;">
-                             <input style="width:80px" name="cap" type="text" id="cap" value="<?php echo (isset( $posts->cap) &&  $posts->cap != '') ?  $posts->cap : ''; ?>"/>
-                            <br />
-                            <span class="description">CAP</span>
-                        </div>
-                        <div style="display:inline-block;">
-                             <input style="width:50px" name="prov" type="text" id="prov" value="<?php echo (isset( $posts->prov) &&  $posts->prov != '') ?  $posts->prov : ''; ?>"/>
-                            <br />
-                            <span class="description">Sigla Prov</span>
-                        </div>
-                        </label>
-                    </fieldset>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row">Telefono Mittente</th>
-                <td>
-                    <fieldset>
-                        <label>
-                             <input style="" name="telefono" type="text" id="nome" value="<?php echo (isset( $posts->telefono) &&  $posts->telefono != '') ?  $posts->telefono : ''; ?>"/>
-                        </label>
-                        <br />
-                            <span class="description">Verrà inviato al corriere per il ritiro del pacco</span>
-                    </fieldset>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row">Conto Corrente<br><span class="description" style="font-weight:normal">Se si effettuano spedizioni con contrassegno verrà usato questo conto per lo storno del contrassegno.</span></th>
-                <td>
-                    <fieldset>
-                        <label>
-                        <div><input name="contrassegno_conto" type="text" id="contrassegno_conto" value="<?php echo (isset( $posts->contrassegno_conto) &&  $posts->contrassegno_conto != '') ?  $posts->contrassegno_conto : ''; ?>"/><br>
-                        <span class="description">Intestatario Conto</span></div><div>
-                           <input name="contrassegno_iban" type="text" id="contrassegno_iban" value="<?php echo (isset( $posts->contrassegno_iban) &&  $posts->contrassegno_iban != '') ?  $posts->contrassegno_iban : ''; ?>"/><br><span class="description">IBAN conto corrente</span></div>
-                        </label>
-                        
-                    </fieldset>
-                </td>
-            </tr>
-             <tr>
-                <th scope="row">Metodo di pagamento</th>
-                <td>
-                    <fieldset>
-                        <label>
-                             <select name="pagamento">
-                                 <option <?php if($posts->pagamento=="Paga Dopo") echo "selected='selected'";?> value="Paga Dopo">Paga i tuoi ordini dopo (non saranno spediti se non pagati)</option>
-                                 <option <?php if($posts->pagamento=="Credito") echo "selected='selected'";?> value="Credito">Usa il credito - spediti subito</option>
-                             </select>
-                            
-                        </label>
-                        <br />
-                            <span class="description">Se scegli Paga dopo dovrai entrare nella tua area privata e pagare i tuoi ordini prima che possano essere spediti.</span>
-                    </fieldset>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row">Corriere</th>
-                <td>
-                    <fieldset>
-                        <label>
-                             <select name="corriere">
-                                 <option <?php if($posts->corriere=="0") echo "selected='selected'";?> value="0">Corriere con prezzo più basso</option>
-                              <?php  foreach ( $curriers as $corriere ) { ?>
-                              <option <?php if($posts->corriere==$corriere->id) echo "selected='selected'";?>  value="<?php echo $corriere->id; ?>"><?php echo $corriere->corriere; ?> - Tempo di consegna: <?php echo $corriere->tconsegna; ?></option>
-                              <?php } ?>
-                             </select>  - <button id="refreshcorrieri" class="btn">Refresh lista corrieri</button>
-                            
-                        </label>
-                        <br />
-                            <span class="description">Puoi scegliere un corriere predefinito oppure il corriere con il prezzo più basso verrà scelto automaticamente.</span>
-                    </fieldset>
-                </td>
-            </tr>
-        </table>
-        <input type="submit" value="Save" />
+
+        <!-- Login Section -->
+        <div style="background: white; border-radius: 8px; padding: 25px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <h3 style="margin: 0 0 5px 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                <span class="dashicons dashicons-admin-users" style="font-size: 20px; color: #0073aa;"></span>
+                Login
+            </h3>
+            <p style="margin: 0 0 20px 0; font-size: 13px; color: #666;">Credenziali di accesso alla tua area privata Noispediamo.it</p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 5px;">Username</label>
+                    <input name="email" type="text" id="email" value="<?php echo (isset( $posts->email) &&  $posts->email != '') ?  $posts->email : ''; ?>" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ddd; font-size: 14px;"/>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 5px;">Password</label>
+                    <input name="password" type="password" id="password" value="<?php echo (isset( $posts->password) &&  $posts->password != '') ?  $posts->password : ''; ?>" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ddd; font-size: 14px;"/>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sender Information Section -->
+        <div style="background: white; border-radius: 8px; padding: 25px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <h3 style="margin: 0 0 5px 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                <span class="dashicons dashicons-location" style="font-size: 20px; color: #0073aa;"></span>
+                Nome Mittente
+            </h3>
+            <p style="margin: 0 0 20px 0; font-size: 13px; color: #666;">Verrà usato come mittente di tutti gli ordini inviati</p>
+
+            <div>
+                <input name="nome" type="text" id="nome" value="<?php echo (isset( $posts->nome) &&  $posts->nome != '') ?  $posts->nome : ''; ?>" placeholder="Es: Carmelo Test" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ddd; font-size: 14px;"/>
+            </div>
+        </div>
+
+        <!-- Address Section -->
+        <div style="background: white; border-radius: 8px; padding: 25px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <h3 style="margin: 0 0 20px 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                <span class="dashicons dashicons-admin-home" style="font-size: 20px; color: #0073aa;"></span>
+                Indirizzo
+            </h3>
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 5px;">Via/Piazza</label>
+                    <input name="indirizzo" type="text" id="indirizzo" value="<?php echo (isset( $posts->indirizzo) &&  $posts->indirizzo != '') ?  $posts->indirizzo : ''; ?>" placeholder="via del provolone" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ddd; font-size: 14px;"/>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 5px;">N. civico</label>
+                    <input name="civico" type="text" id="civico" value="<?php echo (isset( $posts->civico) &&  $posts->civico != '') ?  $posts->civico : ''; ?>" placeholder="123" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ddd; font-size: 14px;"/>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px;">
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 5px;">Città</label>
+                    <input name="citta" type="text" id="citta" value="<?php echo (isset( $posts->citta) &&  $posts->citta != '') ?  $posts->citta : ''; ?>" placeholder="Modica" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ddd; font-size: 14px;"/>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 5px;">CAP</label>
+                    <input name="cap" type="text" id="cap" value="<?php echo (isset( $posts->cap) &&  $posts->cap != '') ?  $posts->cap : ''; ?>" placeholder="97015" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ddd; font-size: 14px;"/>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 5px;">Sigla Prov</label>
+                    <input name="prov" type="text" id="prov" value="<?php echo (isset( $posts->prov) &&  $posts->prov != '') ?  $posts->prov : ''; ?>" placeholder="RG" maxlength="2" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ddd; font-size: 14px; text-transform: uppercase;"/>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phone Section -->
+        <div style="background: white; border-radius: 8px; padding: 25px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <h3 style="margin: 0 0 5px 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                <span class="dashicons dashicons-phone" style="font-size: 20px; color: #0073aa;"></span>
+                Telefono Mittente
+            </h3>
+            <p style="margin: 0 0 20px 0; font-size: 13px; color: #666;">Verrà inviato al corriere per il ritiro del pacco</p>
+
+            <div>
+                <input name="telefono" type="text" id="telefono" value="<?php echo (isset( $posts->telefono) &&  $posts->telefono != '') ?  $posts->telefono : ''; ?>" placeholder="3334545345" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ddd; font-size: 14px;"/>
+            </div>
+        </div>
+
+        <!-- Bank Account Section -->
+        <div style="background: white; border-radius: 8px; padding: 25px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <h3 style="margin: 0 0 5px 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                <span class="dashicons dashicons-money-alt" style="font-size: 20px; color: #0073aa;"></span>
+                Conto Corrente
+            </h3>
+            <p style="margin: 0 0 20px 0; font-size: 13px; color: #666;">Se si effettuano spedizioni con contrassegno verrà usato questo conto per lo storno del contrassegno.</p>
+
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 5px;">Intestatario Conto</label>
+                <input name="contrassegno_conto" type="text" id="contrassegno_conto" value="<?php echo (isset( $posts->contrassegno_conto) &&  $posts->contrassegno_conto != '') ?  $posts->contrassegno_conto : ''; ?>" placeholder="Carmelo Test" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ddd; font-size: 14px;"/>
+            </div>
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 5px;">IBAN conto corrente</label>
+                <input name="contrassegno_iban" type="text" id="contrassegno_iban" value="<?php echo (isset( $posts->contrassegno_iban) &&  $posts->contrassegno_iban != '') ?  $posts->contrassegno_iban : ''; ?>" placeholder="IT12345" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ddd; font-size: 14px;"/>
+            </div>
+        </div>
+
+        <!-- Payment Method Section -->
+        <div style="background: white; border-radius: 8px; padding: 25px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <h3 style="margin: 0 0 5px 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                <span class="dashicons dashicons-cart" style="font-size: 20px; color: #0073aa;"></span>
+                Metodo di pagamento
+            </h3>
+            <p style="margin: 0 0 20px 0; font-size: 13px; color: #666;">Se scegli Paga dopo dovrai entrare nella tua area privata e pagare i tuoi ordini prima che possano essere spediti.</p>
+
+            <div>
+                <select name="pagamento" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ddd; font-size: 14px;">
+                    <option <?php if($posts->pagamento=="Paga Dopo") echo "selected='selected'";?> value="Paga Dopo">Paga i tuoi ordini dopo (non saranno spediti se non pagati)</option>
+                    <option <?php if($posts->pagamento=="Credito") echo "selected='selected'";?> value="Credito">Usa il credito - spediti subito</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Carrier Section -->
+        <div style="background: white; border-radius: 8px; padding: 25px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <h3 style="margin: 0 0 5px 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                <span class="dashicons dashicons-products" style="font-size: 20px; color: #0073aa;"></span>
+                Corriere
+            </h3>
+            <p style="margin: 0 0 20px 0; font-size: 13px; color: #666;">Puoi scegliere un corriere predefinito oppure il corriere con il prezzo più basso verrà scelto automaticamente.</p>
+
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <select name="corriere" style="flex: 1; padding: 10px; border-radius: 4px; border: 1px solid #ddd; font-size: 14px;">
+                    <option <?php if($posts->corriere=="0") echo "selected='selected'";?> value="0">Corriere con prezzo più basso</option>
+                    <?php foreach ( $curriers as $corriere ) { ?>
+                        <option <?php if($posts->corriere==$corriere->id) echo "selected='selected'";?> value="<?php echo $corriere->id; ?>">
+                            <?php echo $corriere->corriere; ?> - Tempo di consegna: <?php echo $corriere->tconsegna; ?>
+                        </option>
+                    <?php } ?>
+                </select>
+                <button type="button" id="refreshcorrieri" class="button" style="white-space: nowrap;">Refresh lista corrieri</button>
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div style="text-align: right;">
+            <input type="submit" value="Salva Impostazioni" class="button button-primary button-hero" style="font-size: 16px; padding: 12px 30px;"/>
+        </div>
     </form>
 </div>
 
