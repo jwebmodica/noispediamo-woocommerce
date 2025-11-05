@@ -24,10 +24,16 @@ if ( ! file_exists( $update_checker_path ) ) {
 // Load the Plugin Update Checker library
 require_once $update_checker_path;
 
-// Load Parsedown dependency (required for parsing GitHub release notes)
-$parsedown_path = CSPEDISCI_PLUGIN_DIR . 'core/lib/plugin-update-checker/vendor/Parsedown.php';
+// Load vendor dependencies manually (required for parsing GitHub release notes and readme)
+$vendor_dir = CSPEDISCI_PLUGIN_DIR . 'core/lib/plugin-update-checker/vendor/';
+$parsedown_path = $vendor_dir . 'Parsedown.php';
+$readme_parser_path = $vendor_dir . 'PucReadmeParser.php';
+
 if ( file_exists( $parsedown_path ) ) {
 	require_once $parsedown_path;
+}
+if ( file_exists( $readme_parser_path ) ) {
+	require_once $readme_parser_path;
 }
 
 // Import the factory class (required for version 5.x)
