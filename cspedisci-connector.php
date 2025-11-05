@@ -269,6 +269,8 @@ function test_init(){
 ) );
 $orders = $query->get_orders();
 
+echo '<div class="orders-container">';
+
 if (empty($orders)) {
     echo '<div style="background: white; border-radius: 8px; padding: 40px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">';
     echo '<p style="font-size: 16px; color: #666;">📦 Nessun ordine da spedire</p>';
@@ -310,31 +312,85 @@ foreach ($orders as $idordine) {
 
         <!-- Shipping Address -->
         <div style="margin-bottom: 20px;">
-            <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 10px;">
-                <span style="font-size: 14px;">📍</span>
-                <strong style="font-size: 13px;">Indirizzo di spedizione:</strong>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span style="font-size: 14px;">📍</span>
+                    <strong style="font-size: 13px;">Indirizzo di spedizione:</strong>
+                </div>
+                <button type="button" class="button button-small toggle-edit-address" style="font-size: 11px; padding: 4px 10px;">Modifica</button>
             </div>
-            <div style="font-size: 13px; color: #666;">
-                <?php
-                $full_address = trim($ordine['address_1']) . ', ' . trim($ordine['city']) . ', ' . trim($ordine['state']) . ' ' . trim($ordine['postcode']) . ', Italy';
-                echo esc_html($full_address);
-                ?>
+
+            <!-- Read-only address display -->
+            <div class="address-display" style="font-size: 13px; color: #666;">
+                <div style="margin-bottom: 3px;"><strong><?php echo esc_html(trim($ordine['first_name'] . ' ' . $ordine['last_name'])); ?></strong></div>
+                <div><?php echo esc_html($ordine['address_1']); ?></div>
+                <div><?php echo esc_html($ordine['city'] . ', ' . $ordine['state'] . ' ' . $ordine['postcode']); ?></div>
+                <div>Telefono: <?php echo esc_html($billing_phone); ?></div>
+            </div>
+
+            <!-- Editable address form (hidden by default) -->
+            <div class="address-edit-form" style="display: none; background: #f7f9fc; border-radius: 6px; padding: 15px; margin-top: 10px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                    <div>
+                        <label style="display: block; font-size: 11px; color: #666; margin-bottom: 4px;">Nome</label>
+                        <input type="text" class="edit-nome" value="<?php echo esc_attr($ordine['first_name']); ?>" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 11px; color: #666; margin-bottom: 4px;">Cognome</label>
+                        <input type="text" class="edit-cognome" value="<?php echo esc_attr($ordine['last_name']); ?>" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 10px;">
+                    <div>
+                        <label style="display: block; font-size: 11px; color: #666; margin-bottom: 4px;">Via</label>
+                        <input type="text" class="edit-indirizzo" value="<?php echo esc_attr($ordine['address_1']); ?>" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 11px; color: #666; margin-bottom: 4px;">Civico/Interno</label>
+                        <input type="text" class="edit-civico" value="" placeholder="52" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                    <div>
+                        <label style="display: block; font-size: 11px; color: #666; margin-bottom: 4px;">Città</label>
+                        <input type="text" class="edit-citta" value="<?php echo esc_attr($ordine['city']); ?>" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 11px; color: #666; margin-bottom: 4px;">Provincia</label>
+                        <input type="text" class="edit-prov" value="<?php echo esc_attr($ordine['state']); ?>" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 11px; color: #666; margin-bottom: 4px;">CAP</label>
+                        <input type="text" class="edit-cap" value="<?php echo esc_attr($ordine['postcode']); ?>" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <label style="display: block; font-size: 11px; color: #666; margin-bottom: 4px;">Telefono</label>
+                    <input type="text" class="edit-telefono" value="<?php echo esc_attr($billing_phone); ?>" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <label style="display: block; font-size: 11px; color: #666; margin-bottom: 4px;">Email</label>
+                    <input type="text" class="edit-email" value="<?php echo esc_attr($billing_email); ?>" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 11px; color: #666; margin-bottom: 4px;">Note (opzionale)</label>
+                    <textarea class="edit-note" rows="2" placeholder="Es: solo giorni feriali, citofono non funzionante..." style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd; resize: vertical;"><?php echo esc_attr($order->get_customer_note()); ?></textarea>
+                    <small style="font-size: 10px; color: #999;">Max 100 caratteri</small>
+                </div>
+
+                <div style="margin-top: 10px; text-align: right;">
+                    <button type="button" class="button button-small toggle-edit-address" style="font-size: 11px; padding: 4px 10px;">Chiudi</button>
+                </div>
             </div>
         </div>
 
         <!-- Packages Section -->
         <input class="ordineid rigaordine" name="idordine" type="hidden" value="<?php echo $idordine;?>">
-
-        <!-- Hidden destination fields (required for backend) -->
-        <input type="hidden" class="dest-nome" value="<?php echo esc_attr(trim($ordine['company'] . ' ' . $ordine['first_name'] . ' ' . $ordine['last_name'])); ?>">
-        <input type="hidden" class="dest-email" value="<?php echo esc_attr($billing_email); ?>">
-        <input type="hidden" class="dest-telefono" value="<?php echo esc_attr($billing_phone); ?>">
-        <input type="hidden" class="dest-indirizzo" value="<?php echo esc_attr($ordine['address_1']); ?>">
-        <input type="hidden" class="dest-civico" value="">
-        <input type="hidden" class="dest-citta" value="<?php echo esc_attr($ordine['city']); ?>">
-        <input type="hidden" class="dest-cap" value="<?php echo esc_attr($ordine['postcode']); ?>">
-        <input type="hidden" class="dest-prov" value="<?php echo esc_attr($ordine['state']); ?>">
-        <input type="hidden" class="dest-note" value="<?php echo esc_attr($order->get_customer_note()); ?>">
 
         <div style="background: #f7f9fc; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
             <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 12px;">
@@ -409,6 +465,8 @@ foreach ($orders as $idordine) {
 
     <?php
 }
+
+echo '</div><!-- End orders-container -->';
 }
 
  

@@ -19,6 +19,23 @@ function clearFilters() {
 
 jQuery(document).ready(function($) {
 
+    // Toggle address edit form
+    $(document).on('click', '.toggle-edit-address', function(e) {
+        e.preventDefault();
+        var $card = $(this).closest('[id^="order-card-"]');
+        var $editForm = $card.find('.address-edit-form');
+        var $display = $card.find('.address-display');
+
+        $editForm.slideToggle(300);
+
+        // Change button text
+        if ($editForm.is(':visible')) {
+            $(this).text('Chiudi');
+        } else {
+            $(this).text('Modifica');
+        }
+    });
+
     // Handle add package button
     $(document).on('click', '.aggiungi-pacco', function(e) {
         e.preventDefault();
@@ -108,22 +125,57 @@ jQuery(document).ready(function($) {
         var ordineid = $card.find('.rigaordine').val();
         var ritiro = $card.find('.ritiro').val();
 
-        // Collect destination address data (from hidden fields)
-        var destinatario = {
-            nome: $card.find('.dest-nome').val().trim(),
-            indirizzo: $card.find('.dest-indirizzo').val().trim(),
-            civico: $card.find('.dest-civico').val().trim(),
-            cap: $card.find('.dest-cap').val().trim(),
-            citta: $card.find('.dest-citta').val().trim(),
-            prov: $card.find('.dest-prov').val().trim(),
-            email: $card.find('.dest-email').val().trim(),
-            telefono: $card.find('.dest-telefono').val().trim(),
-            note: $card.find('.dest-note').val().trim()
-        };
+        // Check if user edited the address fields (edit fields exist and have values)
+        var useEditedFields = $card.find('.edit-nome').length > 0;
+
+        var destinatario;
+        if (useEditedFields) {
+            // Use edited values from the edit form
+            var nome = $card.find('.edit-nome').val().trim();
+            var cognome = $card.find('.edit-cognome').val().trim();
+            var nomeCompleto = (nome + ' ' + cognome).trim();
+
+            destinatario = {
+                nome: nomeCompleto,
+                indirizzo: $card.find('.edit-indirizzo').val().trim(),
+                civico: $card.find('.edit-civico').val().trim(),
+                cap: $card.find('.edit-cap').val().trim(),
+                citta: $card.find('.edit-citta').val().trim(),
+                prov: $card.find('.edit-prov').val().trim(),
+                email: $card.find('.edit-email').val().trim(),
+                telefono: $card.find('.edit-telefono').val().trim(),
+                note: $card.find('.edit-note').val().trim()
+            };
+        } else {
+            // Fallback to hidden fields (shouldn't happen with new layout, but just in case)
+            destinatario = {
+                nome: $card.find('.dest-nome').val().trim(),
+                indirizzo: $card.find('.dest-indirizzo').val().trim(),
+                civico: $card.find('.dest-civico').val().trim(),
+                cap: $card.find('.dest-cap').val().trim(),
+                citta: $card.find('.dest-citta').val().trim(),
+                prov: $card.find('.dest-prov').val().trim(),
+                email: $card.find('.dest-email').val().trim(),
+                telefono: $card.find('.dest-telefono').val().trim(),
+                note: $card.find('.dest-note').val().trim()
+            };
+        }
 
         // Validate destination data
         if (!destinatario.nome || !destinatario.indirizzo || !destinatario.cap || !destinatario.citta || !destinatario.prov) {
-            alert('Dati destinatario incompleti');
+            alert('Dati destinatario incompleti. Compila tutti i campi obbligatori (Nome, Indirizzo, CAP, Città, Provincia).');
+            return;
+        }
+
+        // Validate email
+        if (!destinatario.email || !destinatario.email.includes('@')) {
+            alert('Inserisci un indirizzo email valido.');
+            return;
+        }
+
+        // Validate phone
+        if (!destinatario.telefono) {
+            alert('Inserisci un numero di telefono.');
             return;
         }
 
@@ -194,19 +246,37 @@ jQuery(document).ready(function($) {
                     var objJSON = response.data;
                     var orderCard = "#order-card-" + objJSON.idordine;
                     var btninvia = "#invia-" + objJSON.idordine;
-                    $(orderCard).find('.nordine').html('<div style="margin-top: 15px; padding: 10px; background: #d4edda; color: #155724; border-radius: 4px; font-size: 13px;">✅ Spedizione nr ' + objJSON.id + ' inviata con successo</div>');
-                    $(btninvia).prop('disabled', true).text('Inviato').css('opacity', '0.5');
-                    $('html, body').animate({ scrollTop: 0 }, 300);
-                    $('body').prepend('<div id="cfeedback" class="notice notice-success is-dismissible"><p>Spedizione inviata con successo. Se hai impostato come pagamento "Paga con Credito" la spedizione è già inviata. Altrimenti fai login nella tua area privata e paga la spedizione: Spedizione nr ' + objJSON.id + '</p><button type="button" class="notice-dismiss"><span class="screen-reader-text">Dismiss this notice.</span></button></div>');
-                    $(".notice-dismiss").click(function(e) {
-                        var t = $("#cfeedback");
-                        e.preventDefault();
-                        t.fadeTo(100, 0, function() {
-                            t.slideUp(100, function() {
-                                t.remove();
-                            });
+                    var trackingUrl = 'https://ordini.noispediamo.it/tracking/' + objJSON.id;
+
+                    // Replace the entire card content with success message
+                    $(orderCard).html(
+                        '<div style="padding: 30px; text-align: center;">' +
+                            '<div style="font-size: 48px; margin-bottom: 15px;">✅</div>' +
+                            '<h3 style="color: #155724; margin-bottom: 10px;">Spedizione Inviata con Successo!</h3>' +
+                            '<p style="font-size: 14px; color: #666; margin-bottom: 15px;">Spedizione nr <strong>' + objJSON.id + '</strong></p>' +
+                            '<div style="background: #f0f9ff; border: 1px solid #b3d9ff; border-radius: 6px; padding: 15px; margin-bottom: 15px;">' +
+                                '<p style="margin: 0; font-size: 13px; color: #333;">📦 <strong>Traccia la spedizione:</strong></p>' +
+                                '<a href="' + trackingUrl + '" target="_blank" style="display: inline-block; margin-top: 8px; padding: 8px 16px; background: #0073aa; color: white; text-decoration: none; border-radius: 4px; font-size: 13px;">Apri Tracking →</a>' +
+                            '</div>' +
+                            '<p style="font-size: 12px; color: #666; margin: 0;">Se hai impostato "Paga con Credito", la spedizione è già attiva. Altrimenti accedi alla tua area privata NoiSpediamo per completare il pagamento.</p>' +
+                        '</div>'
+                    );
+
+                    // Add fade-out animation and remove card after 5 seconds
+                    setTimeout(function() {
+                        $(orderCard).fadeOut(500, function() {
+                            $(this).remove();
+
+                            // Check if there are any remaining orders
+                            if ($('[id^="order-card-"]').length === 0) {
+                                $('.orders-container').html(
+                                    '<div style="background: white; border-radius: 8px; padding: 40px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">' +
+                                        '<p style="font-size: 16px; color: #666;">📦 Nessun ordine da spedire</p>' +
+                                    '</div>'
+                                );
+                            }
                         });
-                    });
+                    }, 5000);
                 }
             },
             error: function(xhr, status, error) {
@@ -230,6 +300,3 @@ jQuery(document).ready(function($) {
         }
     });
 });
-
-});
-
