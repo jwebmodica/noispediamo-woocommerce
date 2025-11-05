@@ -9,6 +9,29 @@ function sanitizeNumericInput(value) {
     return value.toString().replace(',', '.').replace(/[^\d.]/g, '');
 }
 
+// Show loading overlay
+function showLoadingOverlay() {
+    if (jQuery('#noispediamo-loading-overlay').length === 0) {
+        jQuery('body').append(
+            '<div id="noispediamo-loading-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 999999; display: flex; align-items: center; justify-content: center;">' +
+                '<div style="text-align: center; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">' +
+                    '<div style="font-size: 64px; margin-bottom: 20px; animation: hourglass-spin 2s linear infinite;">⏳</div>' +
+                    '<h3 style="margin: 0 0 10px 0; font-size: 18px; color: #333;">Invio in corso...</h3>' +
+                    '<p style="margin: 0; font-size: 14px; color: #666;">Attendere mentre elaboriamo la spedizione</p>' +
+                '</div>' +
+            '</div>' +
+            '<style>@keyframes hourglass-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); }}</style>'
+        );
+    }
+}
+
+// Hide loading overlay
+function hideLoadingOverlay() {
+    jQuery('#noispediamo-loading-overlay').fadeOut(300, function() {
+        jQuery(this).remove();
+    });
+}
+
 // Filter functions
 function applyFilters() {
     var filterDate = document.getElementById('filter_date').value;
@@ -288,6 +311,9 @@ jQuery(document).ready(function($) {
             return;
         }
 
+        // Show loading overlay
+        showLoadingOverlay();
+
         $.ajax({
             type: "POST",
             url: cspedisci.ajax_url,
@@ -300,6 +326,9 @@ jQuery(document).ready(function($) {
                 ritiro: ritiro
             },
             success: function(response) {
+                // Hide loading overlay
+                hideLoadingOverlay();
+
                 $("#cfeedback").remove();
 
                 if (!response.success) {
@@ -356,6 +385,8 @@ jQuery(document).ready(function($) {
                 }
             },
             error: function(xhr, status, error) {
+                // Hide loading overlay
+                hideLoadingOverlay();
                 alert('Errore di connessione: ' + error);
             }
         });
