@@ -370,11 +370,25 @@ jQuery(document).ready(function($) {
         }
     });
 
+    // Calculate next available business day
+    function getNextBusinessDay() {
+        var date = new Date();
+        date.setDate(date.getDate() + 1); // Start with tomorrow
+
+        // Skip weekends (0 = Sunday, 6 = Saturday)
+        while (date.getDay() === 0 || date.getDay() === 6) {
+            date.setDate(date.getDate() + 1);
+        }
+
+        return date;
+    }
+
     // Initialize datepicker for pickup date
     $( '.my-datepicker' ).datepicker({
         dateFormat: "dd/mm/yy",
         changeMonth: true,
         changeYear: true,
+        defaultDate: getNextBusinessDay(),  // Set default to next business day
         minDate: +1,  // Tomorrow (no same-day pickup)
         maxDate: "+14D",  // Max 14 days in advance
         firstDay: 1,  // Week starts on Monday

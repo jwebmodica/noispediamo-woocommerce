@@ -349,17 +349,30 @@ class Cspedisci_Connector_Run{
 		}
 
 		if ( isset( $risposta['errors'] ) && $risposta['errors'] === 0 ) {
-			// Update order status
-			$order->update_status( 'shipped' );
-
-			// Add order note
+			// Get tracking ID from response
 			$idspedisci = isset( $risposta['id'] ) ? sanitize_text_field( $risposta['id'] ) : '';
-			$note = sprintf( __( 'Ordine inviato al corriere nr ordine %s', 'cspedisci-connector' ), $idspedisci );
+			$tracking_url = 'https://ordini.noispediamo.it/tracking/' . $idspedisci;
+
+			// Update order status to completed
+			$order->update_status( 'completed', __( 'Ordine completato e inviato a NoiSpediamo.', 'cspedisci-connector' ) );
+
+			// Add tracking information to order
+			$order->update_meta_data( '_noispediamo_tracking_id', $idspedisci );
+			$order->update_meta_data( '_noispediamo_tracking_url', $tracking_url );
+			$order->save();
+
+			// Add order note with tracking link
+			$note = sprintf(
+				__( 'Ordine inviato al corriere. Tracking ID: %s - Traccia spedizione: %s', 'cspedisci-connector' ),
+				$idspedisci,
+				$tracking_url
+			);
 			$order->add_order_note( $note );
 
 			wp_send_json_success( array(
 				'id' => $idspedisci,
-				'idordine' => $idordine
+				'idordine' => $idordine,
+				'tracking_url' => $tracking_url
 			) );
 		} else {
 			wp_send_json_error( array( 'issue' => 'Credenziali errate. Controlla su Impostazioni di aver inserito la tua email e password corretta.' ) );

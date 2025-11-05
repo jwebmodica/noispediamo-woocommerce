@@ -5,13 +5,13 @@
  * @package       CSPEDISCI
  * @author        Jweb
  * @license       gplv2
- * @version       1.1.14
+ * @version       1.1.16
  *
  * @wordpress-plugin
  * Plugin Name:   NoiSpediamo Connector
  * Plugin URI:    https://www.noispediamo.it
  * Description:   Invia i tuoi ordini woocommerce a Noispediamo.it tramite cspedisci-connector
- * Version:       1.1.14
+ * Version:       1.1.16
  * Author:        Jweb
  * Author URI:    https://www.jwebmodica.it
  * Text Domain:   cspedisci-connector
@@ -34,7 +34,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 define( 'CSPEDISCI_NAME',			'NoiSpediamo Connector' );
 
 // Plugin version
-define( 'CSPEDISCI_VERSION',		'1.1.14' );
+define( 'CSPEDISCI_VERSION',		'1.1.16' );
 
 // Plugin Root File
 define( 'CSPEDISCI_PLUGIN_FILE',	__FILE__ );
@@ -297,6 +297,13 @@ foreach ($orders as $idordine) {
     $billing_phone = $order->get_billing_phone();
     $order_date = $order->get_date_created()->format('d/m/Y');
     $order_total = $order->get_total();
+
+    // Calculate next available business day (skip weekends)
+    $default_pickup_date = new DateTime('tomorrow');
+    while ($default_pickup_date->format('N') >= 6) { // 6 = Saturday, 7 = Sunday
+        $default_pickup_date->modify('+1 day');
+    }
+    $default_pickup_formatted = $default_pickup_date->format('d/m/Y');
     ?>
 
     <!-- Order Card -->
@@ -440,7 +447,7 @@ foreach ($orders as $idordine) {
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
             <div>
                 <label style="display: block; font-size: 12px; font-weight: 600; color: #333; margin-bottom: 5px;">Data ritiro</label>
-                <input name="ritiro" class="ritiro my-datepicker" required="required" type="text" placeholder="gg/mm/aaaa" style="width:100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                <input name="ritiro" class="ritiro my-datepicker" required="required" type="text" value="<?php echo esc_attr($default_pickup_formatted); ?>" placeholder="gg/mm/aaaa" style="width:100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
             </div>
             <div>
                 <label style="display: block; font-size: 12px; font-weight: 600; color: #333; margin-bottom: 5px;">Corriere</label>
