@@ -216,15 +216,20 @@ jQuery(document).ready(function($) {
     });
     
     
+    // Initialize datepicker for pickup date
     $( '.my-datepicker' ).datepicker({
         dateFormat: "dd/mm/yy",
         changeMonth: true,
         changeYear: true,
-        minDate: "today" + 1,
-        setDate: 1,
-        beforeShowDay: $.datepicker.noWeekends
-        });
-} );
+        minDate: +1,  // Tomorrow (no same-day pickup)
+        maxDate: "+14D",  // Max 14 days in advance
+        firstDay: 1,  // Week starts on Monday
+        beforeShowDay: $.datepicker.noWeekends,  // Disable Saturdays and Sundays
+        onSelect: function(dateText) {
+            $(this).trigger('change');
+        }
+    });
+});
 
 });
 

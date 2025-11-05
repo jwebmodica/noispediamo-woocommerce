@@ -253,6 +253,13 @@ function test_init(){
     </div>
 
     <?php
+    // Get corrieri from database
+    $tablecorrieri = $wpdb->prefix . 'cspedisci_corrieri';
+    $corrieri = $wpdb->get_results("SELECT * FROM $tablecorrieri");
+
+    // Get default corriere from settings
+    $default_corriere = $settings && !empty($settings->corriere) ? $settings->corriere : '';
+
     $query = new WC_Order_Query( array(
     'limit' => $orders_limit,
     'orderby' => 'date',
@@ -287,7 +294,7 @@ foreach ($orders as $idordine) {
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid #f5f5f5;">
             <div>
                 <span style="font-size: 14px; color: #666;">📦</span>
-                <strong style="font-size: 15px; margin-left: 5px;">CS<?php echo $idordine; ?></strong>
+                <strong style="font-size: 15px; margin-left: 5px;">Ordine #<?php echo $idordine; ?></strong>
             </div>
             <div style="text-align: right; font-size: 13px; color: #666;">
                 <?php echo $order_date; ?>
@@ -369,12 +376,20 @@ foreach ($orders as $idordine) {
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
             <div>
                 <label style="display: block; font-size: 12px; font-weight: 600; color: #333; margin-bottom: 5px;">Data ritiro</label>
-                <input name="ritiro" class="ritiro my-datepicker" required="required" type="text" placeholder="06/11/2025" style="width:100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                <input name="ritiro" class="ritiro my-datepicker" required="required" type="text" placeholder="gg/mm/aaaa" style="width:100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
             </div>
             <div>
                 <label style="display: block; font-size: 12px; font-weight: 600; color: #333; margin-bottom: 5px;">Corriere</label>
-                <select style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
-                    <option>POSTE DELIVERY (1-3 gg)</option>
+                <select name="corriere" class="corriere-select" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                    <?php if (empty($corrieri)): ?>
+                        <option value="">Nessun corriere disponibile</option>
+                    <?php else: ?>
+                        <?php foreach ($corrieri as $corriere): ?>
+                            <option value="<?php echo esc_attr($corriere->id); ?>" <?php selected($corriere->id, $default_corriere); ?>>
+                                <?php echo esc_html($corriere->corriere . ' (' . $corriere->tconsegna . ')'); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </select>
             </div>
         </div>
