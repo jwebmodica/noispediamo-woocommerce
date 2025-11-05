@@ -205,15 +205,6 @@ function test_init(){
     if (!in_array($orders_limit, $allowed_limits)) {
         $orders_limit = 10;
     }
-
-    // Show warning if settings are not configured
-    if (!$settings_configured) {
-        echo '<div class="notice notice-error" style="padding: 15px; margin: 20px 0; border-left: 4px solid #dc3232;">';
-        echo '<h3 style="margin-top: 0;">⚠️ Configurazione Richiesta</h3>';
-        echo '<p><strong>Prima di poter inviare spedizioni, devi configurare i dati del mittente nelle impostazioni del plugin.</strong></p>';
-        echo '<p>Vai su <a href="?page=cspedisci-settings" class="button button-primary">Impostazioni NoiSpediamo</a> e compila tutti i campi obbligatori (Nome, Indirizzo, CAP, Città, Provincia, Email).</p>';
-        echo '</div>';
-    }
     ?>
 
     <!-- Page Header -->
@@ -222,6 +213,17 @@ function test_init(){
             <span class="dashicons dashicons-products" style="font-size: 32px; width: 32px; height: 32px;"></span>
             NoiSpediamo Connector
         </h1>
+
+        <?php
+        // Show warning if settings are not configured
+        if (!$settings_configured) {
+            echo '<div class="notice notice-error is-dismissible" style="padding: 15px; margin: 0 0 20px 0; border-left: 4px solid #dc3232; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">';
+            echo '<h3 style="margin-top: 0;">⚠️ Configurazione Richiesta</h3>';
+            echo '<p><strong>Prima di poter inviare spedizioni, devi configurare i dati del mittente nelle impostazioni del plugin.</strong></p>';
+            echo '<p style="margin-bottom: 0;">Vai su <a href="?page=cpsedisci-settings" class="button button-primary">Impostazioni NoiSpediamo</a> e compila tutti i campi obbligatori (Nome, Indirizzo, CAP, Città, Provincia, Email).</p>';
+            echo '</div>';
+        }
+        ?>
     </div>
 
     <!-- Filter Section -->
