@@ -34,7 +34,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 define( 'CSPEDISCI_NAME',			'Cspedisci Connector' );
 
 // Plugin version
-define( 'CSPEDISCI_VERSION',		'1.0.0' );
+define( 'CSPEDISCI_VERSION',		'1.1.10' );
 
 // Plugin Root File
 define( 'CSPEDISCI_PLUGIN_FILE',	__FILE__ );
