@@ -2,6 +2,13 @@
 Backend related javascript
 ------------------------*/
 
+// Sanitize numeric input: replace comma with dot, remove non-numeric characters except dot
+function sanitizeNumericInput(value) {
+    if (!value) return '';
+    // Convert to string, replace comma with dot, keep only numbers and dots
+    return value.toString().replace(',', '.').replace(/[^\d.]/g, '');
+}
+
 // Filter functions
 function applyFilters() {
     var filterDate = document.getElementById('filter_date').value;
@@ -251,6 +258,12 @@ jQuery(document).ready(function($) {
             var largh = $(this).find('.largh').val();
             var prof = $(this).find('.prof').val();
 
+            // Sanitize inputs: replace comma with dot, remove non-numeric characters except dot
+            peso = sanitizeNumericInput(peso);
+            alt = sanitizeNumericInput(alt);
+            largh = sanitizeNumericInput(largh);
+            prof = sanitizeNumericInput(prof);
+
             // Validate package data
             if (!peso || !alt || !largh || !prof || parseFloat(peso) <= 0 || parseFloat(alt) <= 0 || parseFloat(largh) <= 0 || parseFloat(prof) <= 0) {
                 valid = false;
@@ -293,7 +306,7 @@ jQuery(document).ready(function($) {
                     // Error case
                     var issue = response.data && response.data.issue ? response.data.issue : 'Errore sconosciuto';
                     $('html, body').animate({ scrollTop: 0 }, 300);
-                    $('body').prepend('<div id="cfeedback" class="notice notice-error is-dismissible"><p>' + issue + '</p><button type="button" class="notice-dismiss"><span class="screen-reader-text">Dismiss this notice.</span></button></div>');
+                    $('.wrap').prepend('<div id="cfeedback" class="notice notice-error is-dismissible" style="margin: 0 0 20px 0; padding: 15px; border-left: 4px solid #dc3232; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"><p style="margin: 0;"><strong>Errore:</strong> ' + issue + '</p><button type="button" class="notice-dismiss"><span class="screen-reader-text">Dismiss this notice.</span></button></div>');
                     $(".notice-dismiss").click(function(e) {
                         var t = $("#cfeedback");
                         e.preventDefault();
@@ -347,8 +360,16 @@ jQuery(document).ready(function($) {
             }
         });
     });
-    
-    
+
+    // Sanitize numeric inputs in real-time (package weight and dimensions)
+    $(document).on('input', '.peso, .alt, .largh, .prof', function() {
+        var $input = $(this);
+        var sanitized = sanitizeNumericInput($input.val());
+        if ($input.val() !== sanitized) {
+            $input.val(sanitized);
+        }
+    });
+
     // Initialize datepicker for pickup date
     $( '.my-datepicker' ).datepicker({
         dateFormat: "dd/mm/yy",

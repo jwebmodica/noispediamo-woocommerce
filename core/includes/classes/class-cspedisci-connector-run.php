@@ -53,6 +53,23 @@ class Cspedisci_Connector_Run{
 	}
 
 	/**
+	 * Sanitize numeric value: replace comma with dot, remove non-numeric chars
+	 *
+	 * @access	private
+	 * @since	1.0.0
+	 * @param	string|float $value The value to sanitize
+	 * @return	float The sanitized numeric value
+	 */
+	private function sanitize_numeric_value( $value ) {
+		if ( empty( $value ) ) {
+			return 0;
+		}
+		// Convert to string, replace comma with dot, remove non-numeric chars except dot
+		$sanitized = preg_replace( '/[^\d.]/', '', str_replace( ',', '.', strval( $value ) ) );
+		return floatval( $sanitized );
+	}
+
+	/**
 	 * ######################
 	 * ###
 	 * #### WORDPRESS HOOK CALLBACKS
@@ -229,10 +246,11 @@ class Cspedisci_Connector_Run{
 		// Validate each package
 		$pacchi_array = array();
 		foreach ( $pacchi_data as $pacco ) {
-			$peso = isset( $pacco['weight'] ) ? floatval( $pacco['weight'] ) : 0;
-			$alt = isset( $pacco['height'] ) ? floatval( $pacco['height'] ) : 0;
-			$largh = isset( $pacco['width'] ) ? floatval( $pacco['width'] ) : 0;
-			$prof = isset( $pacco['length'] ) ? floatval( $pacco['length'] ) : 0;
+			// Sanitize numeric values: replace comma with dot, remove non-numeric chars
+			$peso = isset( $pacco['weight'] ) ? $this->sanitize_numeric_value( $pacco['weight'] ) : 0;
+			$alt = isset( $pacco['height'] ) ? $this->sanitize_numeric_value( $pacco['height'] ) : 0;
+			$largh = isset( $pacco['width'] ) ? $this->sanitize_numeric_value( $pacco['width'] ) : 0;
+			$prof = isset( $pacco['length'] ) ? $this->sanitize_numeric_value( $pacco['length'] ) : 0;
 
 			if ( $peso <= 0 || $alt <= 0 || $largh <= 0 || $prof <= 0 ) {
 				wp_send_json_error( array( 'issue' => 'Specifica le dimensioni corrette per tutti i pacchi' ) );
