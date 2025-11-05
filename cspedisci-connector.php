@@ -1,6 +1,6 @@
 <?php
 /**
- * Cspedisci Connector
+ * NoiSpediamo Connector
  *
  * @package       CSPEDISCI
  * @author        Jweb
@@ -8,7 +8,7 @@
  * @version       1.1.10
  *
  * @wordpress-plugin
- * Plugin Name:   Cspedisci Connector
+ * Plugin Name:   NoiSpediamo Connector
  * Plugin URI:    https://www.noispediamo.it
  * Description:   Invia i tuoi ordini woocommerce a Noispediamo.it tramite cspedisci-connector
  * Version:       1.1.10
@@ -25,13 +25,13 @@
  * Tested up to:      6.4
  *
  * You should have received a copy of the GNU General Public License
- * along with Cspedisci Connector. If not, see <https://www.gnu.org/licenses/gpl-2.0.html/>.
+ * along with NoiSpediamo Connector. If not, see <https://www.gnu.org/licenses/gpl-2.0.html/>.
  */
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) exit;
 // Plugin name
-define( 'CSPEDISCI_NAME',			'Cspedisci Connector' );
+define( 'CSPEDISCI_NAME',			'NoiSpediamo Connector' );
 
 // Plugin version
 define( 'CSPEDISCI_VERSION',		'1.1.10' );
@@ -324,11 +324,10 @@ function cspedisci_settings(){
    $curriers = $wpdb->get_results("SELECT * FROM $tablecorrieri");
    
    // Echo the title of the most commented post
-$ip = $_SERVER['SERVER_ADDR'];
 ?>
     <div class="wrap">
-    <h2>Cspedisci Connector - Impostazioni e Guida</h2>
-    <p>Per poter iniziare ad inviare le tue spedizioni ti servirà configurare il plugin inserendo tutte le voci richieste. <br>Inoltre dovrai comunicarci l'indirizzo IP del tuo server <b><?php echo $ip; ?></b></p>
+    <h2>NoiSpediamo Connector - Impostazioni e Guida</h2>
+    <p>Per poter iniziare ad inviare le tue spedizioni ti servirà configurare il plugin inserendo tutte le voci richieste.</p>
     <form action="" method="post">
         <?php wp_nonce_field( 'cspedisci_save_settings', 'cspedisci_settings_nonce' ); ?>
         <table class="form-table">

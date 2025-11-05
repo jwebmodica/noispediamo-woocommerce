@@ -72,7 +72,7 @@ class Cspedisci_Connector_Run{
 	*/
 	public function add_plugin_action_link( $links ) {
 
-		$links['our_shop'] = sprintf( '<a target="_blank" href="%s" title="Custom Link" style="font-weight:700;">%s</a>', 'https://www.easypacco.it', __( 'Scopri Easypacco', 'cpsedisci-connector' ) );
+		$links['our_shop'] = sprintf( '<a target="_blank" href="%s" title="Custom Link" style="font-weight:700;">%s</a>', 'https://www.noispediamo.it', __( 'Scopri NoiSpediamo', 'cpsedisci-connector' ) );
 
 		return $links;
 	}
