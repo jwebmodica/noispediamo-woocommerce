@@ -505,6 +505,7 @@ foreach ($orders as $idordine) {
                     <?php if (empty($corrieri)): ?>
                         <option value="">Nessun corriere disponibile</option>
                     <?php else: ?>
+                        <option value="0" <?php selected(0, $default_corriere); ?>>Corriere con prezzo più basso</option>
                         <?php foreach ($corrieri as $corriere): ?>
                             <option value="<?php echo esc_attr($corriere->id); ?>" <?php selected($corriere->id, $default_corriere); ?>>
                                 <?php echo esc_html($corriere->corriere . ' (' . $corriere->tconsegna . ')'); ?>
