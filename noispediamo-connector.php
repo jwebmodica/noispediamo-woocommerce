@@ -10,11 +10,11 @@
  * @wordpress-plugin
  * Plugin Name:   NoiSpediamo Connector
  * Plugin URI:    https://www.noispediamo.it
- * Description:   Invia i tuoi ordini woocommerce a Noispediamo.it tramite cspedisci-connector
+ * Description:   Invia i tuoi ordini woocommerce a Noispediamo.it tramite noispediamo-connector
  * Version:       2.0.0
  * Author:        Jweb
  * Author URI:    https://www.jwebmodica.it
- * Text Domain:   cspedisci-connector
+ * Text Domain:   noispediamo-connector
  * Domain Path:   /languages
  * License:       GPLv2
  * License URI:   https://www.gnu.org/licenses/gpl-2.0.html
@@ -78,9 +78,28 @@ function my_plugin_create_db() {
 
 	global $wpdb;
 	$charset_collate = $wpdb->get_charset_collate();
-	$table_name = $wpdb->prefix . 'cspedisci_settings';
-	$tablecorrieri=$wpdb->prefix . 'cspedisci_corrieri';
-	
+	$table_name = $wpdb->prefix . 'noispediamo_settings';
+	$tablecorrieri=$wpdb->prefix . 'noispediamo_corrieri';
+
+	// Migration: Rename old tables if they exist
+	$old_settings_table = $wpdb->prefix . 'cspedisci_settings';
+	$old_corrieri_table = $wpdb->prefix . 'cspedisci_corrieri';
+
+	// Check if old tables exist and new ones don't
+	$old_settings_exists = $wpdb->get_var("SHOW TABLES LIKE '$old_settings_table'") === $old_settings_table;
+	$new_settings_exists = $wpdb->get_var("SHOW TABLES LIKE '$table_name'") === $table_name;
+
+	if ($old_settings_exists && !$new_settings_exists) {
+		$wpdb->query("RENAME TABLE `$old_settings_table` TO `$table_name`");
+	}
+
+	$old_corrieri_exists = $wpdb->get_var("SHOW TABLES LIKE '$old_corrieri_table'") === $old_corrieri_table;
+	$new_corrieri_exists = $wpdb->get_var("SHOW TABLES LIKE '$tablecorrieri'") === $tablecorrieri;
+
+	if ($old_corrieri_exists && !$new_corrieri_exists) {
+		$wpdb->query("RENAME TABLE `$old_corrieri_table` TO `$tablecorrieri`");
+	}
+
 	// Create settings table
 	$sql = "CREATE TABLE IF NOT EXISTS $table_name (
 		`id` MEDIUMINT NOT NULL AUTO_INCREMENT,
@@ -151,7 +170,7 @@ function test_plugin_setup_menu(){
         'Impostazioni', //page title
         'Impostazioni', //menu title
         'manage_options', //capability,
-        'cpsedisci-settings',//menu slug
+        'noispediamo-settings',//menu slug
         'cspedisci_settings' //callback function
     );
 }
@@ -180,7 +199,7 @@ function custom_order_status( $order_statuses ) {
  
 function test_init(){
     global $wpdb;
-    $table_name = $wpdb->prefix . 'cspedisci_settings';
+    $table_name = $wpdb->prefix . 'noispediamo_settings';
 
     // Check if settings are configured
     $settings = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_name WHERE id = %d", 777));
@@ -220,7 +239,7 @@ function test_init(){
             echo '<div class="notice notice-error is-dismissible" style="padding: 15px; margin: 0 0 20px 0; border-left: 4px solid #dc3232; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">';
             echo '<h3 style="margin-top: 0;">⚠️ Configurazione Richiesta</h3>';
             echo '<p><strong>Prima di poter inviare spedizioni, devi configurare i dati del mittente nelle impostazioni del plugin.</strong></p>';
-            echo '<p style="margin-bottom: 0;">Vai su <a href="?page=cpsedisci-settings" class="button button-primary">Impostazioni NoiSpediamo</a> e compila tutti i campi obbligatori (Nome, Indirizzo, CAP, Città, Provincia, Email).</p>';
+            echo '<p style="margin-bottom: 0;">Vai su <a href="?page=noispediamo-settings" class="button button-primary">Impostazioni NoiSpediamo</a> e compila tutti i campi obbligatori (Nome, Indirizzo, CAP, Città, Provincia, Email).</p>';
             echo '</div>';
         }
         ?>
@@ -264,7 +283,7 @@ function test_init(){
 
     <?php
     // Get corrieri from database
-    $tablecorrieri = $wpdb->prefix . 'cspedisci_corrieri';
+    $tablecorrieri = $wpdb->prefix . 'noispediamo_corrieri';
     $corrieri = $wpdb->get_results("SELECT * FROM $tablecorrieri");
 
     // Get default corriere from settings
@@ -497,7 +516,7 @@ echo '</div><!-- End orders-container -->';
 //The markup for your plugin settings page
 function cspedisci_settings(){
     	global $wpdb;
-    	$table_name = $wpdb->prefix . 'cspedisci_settings';
+    	$table_name = $wpdb->prefix . 'noispediamo_settings';
     	if ( isset( $_POST['email'] ) && isset( $_POST['cspedisci_settings_nonce'] ) && wp_verify_nonce( $_POST['cspedisci_settings_nonce'], 'cspedisci_save_settings' ) ){
 
             $wpdb->update(
@@ -527,7 +546,7 @@ function cspedisci_settings(){
             $password = sanitize_text_field( $_POST['password'] );
 
             if ( !empty( $username ) && !empty( $password ) ) {
-                $tablecorrieri = $wpdb->prefix . 'cspedisci_corrieri';
+                $tablecorrieri = $wpdb->prefix . 'noispediamo_corrieri';
                 $basicauth = base64_encode( $username . ':' . $password );
 
                 // Make API call to get corrieri
@@ -565,12 +584,12 @@ function cspedisci_settings(){
                 }
             }
         }
-    	
-    	
-    	
-    	
-    	
-    	$tablecorrieri=$wpdb->prefix . 'cspedisci_corrieri';
+
+
+
+
+
+    	$tablecorrieri=$wpdb->prefix . 'noispediamo_corrieri';
    $posts = $wpdb->get_row("SELECT * FROM $table_name WHERE id=777");
    $curriers = $wpdb->get_results("SELECT * FROM $tablecorrieri");
    

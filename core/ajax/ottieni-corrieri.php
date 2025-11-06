@@ -3,7 +3,7 @@ $path = preg_replace( '/wp-content.*$/', '', __DIR__ );
 require_once( $path . 'wp-load.php' );
 
 	global $wpdb;
-    	$tablecorrieri=$wpdb->prefix . 'cspedisci_corrieri';
+    	$tablecorrieri=$wpdb->prefix . 'noispediamo_corrieri';
 
 // leggo le variabili 
 $username=$_POST['email'];

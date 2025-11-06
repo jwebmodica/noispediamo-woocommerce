@@ -3,8 +3,8 @@ $path = preg_replace( '/wp-content.*$/', '', __DIR__ );
 require_once( $path . 'wp-load.php' );
 
 	global $wpdb;
-    	$tablecorrieri=$wpdb->prefix . 'cspedisci_corrieri';
-        $table_name = $wpdb->prefix . 'cspedisci_settings';
+    	$tablecorrieri=$wpdb->prefix . 'noispediamo_corrieri';
+        $table_name = $wpdb->prefix . 'noispediamo_settings';
         $posts = $wpdb->get_row("SELECT * FROM $table_name WHERE id=777");
         
 

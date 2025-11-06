@@ -89,7 +89,7 @@ class Cspedisci_Connector_Run{
 	*/
 	public function add_plugin_action_link( $links ) {
 
-		$links['our_shop'] = sprintf( '<a target="_blank" href="%s" title="Custom Link" style="font-weight:700;">%s</a>', 'https://www.noispediamo.it', __( 'Scopri NoiSpediamo', 'cpsedisci-connector' ) );
+		$links['our_shop'] = sprintf( '<a target="_blank" href="%s" title="Custom Link" style="font-weight:700;">%s</a>', 'https://www.noispediamo.it', __( 'Scopri NoiSpediamo', 'noispediamo-connector' ) );
 
 		return $links;
 	}
@@ -107,7 +107,7 @@ class Cspedisci_Connector_Run{
 		wp_enqueue_style( 'cspedisci-backend-styles', CSPEDISCI_PLUGIN_URL . 'core/includes/assets/css/backend-styles.css', array(), CSPEDISCI_VERSION, 'all' );
 		wp_enqueue_script( 'cspedisci-backend-scripts', CSPEDISCI_PLUGIN_URL . 'core/includes/assets/js/backend-scripts.js', array('jquery'), CSPEDISCI_VERSION, false );
 		wp_localize_script( 'cspedisci-backend-scripts', 'cspedisci', array(
-			'plugin_name'   	=> __( CSPEDISCI_NAME, 'cspedisci-connector' ),
+			'plugin_name'   	=> __( CSPEDISCI_NAME, 'noispediamo-connector' ),
 			'ajax_url'			=> admin_url( 'admin-ajax.php' ),
 			'nonce_invia_ordine' => wp_create_nonce( 'cspedisci_invia_ordine_nonce' ),
 			'nonce_ottieni_corrieri' => wp_create_nonce( 'cspedisci_ottieni_corrieri_nonce' ),
@@ -182,7 +182,7 @@ class Cspedisci_Connector_Run{
 		}
 
 		global $wpdb;
-		$table_name = $wpdb->prefix . 'cspedisci_settings';
+		$table_name = $wpdb->prefix . 'noispediamo_settings';
 
 		// Get settings
 		$posts = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table_name WHERE id = %d", 777 ) );
@@ -354,7 +354,7 @@ class Cspedisci_Connector_Run{
 			$tracking_url = 'https://ordini.noispediamo.it/tracking/' . $idspedisci;
 
 			// Update order status to completed
-			$order->update_status( 'completed', __( 'Ordine completato e inviato a NoiSpediamo.', 'cspedisci-connector' ) );
+			$order->update_status( 'completed', __( 'Ordine completato e inviato a NoiSpediamo.', 'noispediamo-connector' ) );
 
 			// Add tracking information to order
 			$order->update_meta_data( '_noispediamo_tracking_id', $idspedisci );
@@ -363,7 +363,7 @@ class Cspedisci_Connector_Run{
 
 			// Add order note with tracking link
 			$note = sprintf(
-				__( 'Ordine inviato al corriere. Tracking ID: %s - Traccia spedizione: %s', 'cspedisci-connector' ),
+				__( 'Ordine inviato al corriere. Tracking ID: %s - Traccia spedizione: %s', 'noispediamo-connector' ),
 				$idspedisci,
 				$tracking_url
 			);
@@ -398,7 +398,7 @@ class Cspedisci_Connector_Run{
 		}
 
 		global $wpdb;
-		$tablecorrieri = $wpdb->prefix . 'cspedisci_corrieri';
+		$tablecorrieri = $wpdb->prefix . 'noispediamo_corrieri';
 
 		// Sanitize input variables
 		$username = isset( $_POST['email'] ) ? sanitize_email( $_POST['email'] ) : '';
