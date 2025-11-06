@@ -530,6 +530,9 @@ function cspedisci_settings(){
     	$table_name = $wpdb->prefix . 'noispediamo_settings';
     	if ( isset( $_POST['email'] ) && isset( $_POST['cspedisci_settings_nonce'] ) && wp_verify_nonce( $_POST['cspedisci_settings_nonce'], 'cspedisci_save_settings' ) ){
 
+            // Ensure the default row exists before updating
+            $wpdb->query( $wpdb->prepare( "INSERT IGNORE INTO $table_name (id) VALUES (%d)", 777 ) );
+
             $wpdb->update(
                 $table_name,
                 array(
@@ -594,11 +597,10 @@ function cspedisci_settings(){
                     }
                 }
             }
+
+            // Show success message
+            echo '<div class="notice notice-success is-dismissible" style="margin: 15px 0;"><p><strong>Impostazioni salvate con successo!</strong></p></div>';
         }
-
-
-
-
 
     	$tablecorrieri=$wpdb->prefix . 'noispediamo_corrieri';
    $posts = $wpdb->get_row("SELECT * FROM $table_name WHERE id=777");
