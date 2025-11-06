@@ -108,7 +108,7 @@ function my_plugin_create_db() {
 		`id` INT NOT NULL,
 		`corriere` VARCHAR(200) NOT NULL,
 		`tconsegna` VARCHAR(10) NOT NULL,
-		INDEX (`id`)
+		PRIMARY KEY (`id`)
 	) $charset_collate;";
 
 	dbDelta( $sql );
