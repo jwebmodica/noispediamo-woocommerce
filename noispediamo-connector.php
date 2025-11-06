@@ -73,6 +73,26 @@ CSPEDISCI();
  */
 require_once CSPEDISCI_PLUGIN_DIR . 'core/includes/update-checker.php';
 
+/**
+ * Check and create tables if they don't exist
+ * This runs on every admin page load to ensure tables are always present
+ */
+add_action( 'admin_init', 'noispediamo_check_tables' );
+function noispediamo_check_tables() {
+	global $wpdb;
+	$table_name = $wpdb->prefix . 'noispediamo_settings';
+	$tablecorrieri = $wpdb->prefix . 'noispediamo_corrieri';
+
+	// Check if tables exist
+	$settings_exists = $wpdb->get_var("SHOW TABLES LIKE '$table_name'") === $table_name;
+	$corrieri_exists = $wpdb->get_var("SHOW TABLES LIKE '$tablecorrieri'") === $tablecorrieri;
+
+	// If tables don't exist, create them
+	if (!$settings_exists || !$corrieri_exists) {
+		my_plugin_create_db();
+	}
+}
+
 register_activation_hook( __FILE__, 'my_plugin_create_db' );
 function my_plugin_create_db() {
 
