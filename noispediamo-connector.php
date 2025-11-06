@@ -5,13 +5,13 @@
  * @package       CSPEDISCI
  * @author        Jweb
  * @license       gplv2
- * @version       2.0.0
+ * @version       2.0.1
  *
  * @wordpress-plugin
  * Plugin Name:   NoiSpediamo Connector
  * Plugin URI:    https://www.noispediamo.it
  * Description:   Invia i tuoi ordini woocommerce a Noispediamo.it tramite noispediamo-connector
- * Version:       2.0.0
+ * Version:       2.0.1
  * Author:        Jweb
  * Author URI:    https://www.jwebmodica.it
  * Text Domain:   noispediamo-connector
@@ -34,7 +34,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 define( 'CSPEDISCI_NAME',			'NoiSpediamo Connector' );
 
 // Plugin version
-define( 'CSPEDISCI_VERSION',		'2.0.0' );
+define( 'CSPEDISCI_VERSION',		'2.0.1' );
 
 // Plugin Root File
 define( 'CSPEDISCI_PLUGIN_FILE',	__FILE__ );
@@ -98,6 +98,17 @@ function my_plugin_create_db() {
 
 	if ($old_corrieri_exists && !$new_corrieri_exists) {
 		$wpdb->query("RENAME TABLE `$old_corrieri_table` TO `$tablecorrieri`");
+	}
+
+	// Ensure PRIMARY KEY exists on corrieri table (for both migrated and existing tables)
+	if ($new_corrieri_exists || $old_corrieri_exists) {
+		// Check if PRIMARY KEY already exists
+		$pk_exists = $wpdb->get_var("SHOW KEYS FROM `$tablecorrieri` WHERE Key_name = 'PRIMARY'");
+
+		if (!$pk_exists) {
+			// No PRIMARY KEY exists, add it
+			$wpdb->query("ALTER TABLE `$tablecorrieri` ADD PRIMARY KEY (`id`)");
+		}
 	}
 
 	// Create settings table
