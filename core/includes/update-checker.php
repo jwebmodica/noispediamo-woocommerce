@@ -43,7 +43,7 @@ use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 $myUpdateChecker = PucFactory::buildUpdateChecker(
 	'https://github.com/jwebmodica/noispediamo-woocommerce/',  // Your GitHub repository URL
 	CSPEDISCI_PLUGIN_FILE,                                      // Full path to the main plugin file
-	'cspedisci-connector'                                       // Plugin slug
+	'noispediamo-connector'                                     // Plugin slug
 );
 
 // Set the branch to check for updates (default: master or main)
@@ -63,7 +63,7 @@ $myUpdateChecker->getVcsApi()->enableReleaseAssets();
  * Optional: Add custom header for GitHub repository info
  * This allows WordPress to show "View details" link
  */
-add_filter('puc_request_info_result-cspedisci-connector', 'cspedisci_add_plugin_info', 10, 2);
+add_filter('puc_request_info_result-noispediamo-connector', 'cspedisci_add_plugin_info', 10, 2);
 function cspedisci_add_plugin_info($pluginInfo, $result) {
 	if (isset($result->body)) {
 		$body = json_decode($result->body);
