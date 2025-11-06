@@ -331,10 +331,10 @@ class Cspedisci_Connector_Run{
 		$response = wp_remote_post( 'https://ordini.noispediamo.it/cspedisci-api/spedizione', array(
 			'timeout' => 30,
 			'headers' => array(
-				'Content-Type' => 'application/json',
+				'Content-Type' => 'application/json; charset=UTF-8',
 				'Authorization' => 'Basic ' . $basicauth
 			),
-			'body' => wp_json_encode( $parametri )
+			'body' => wp_json_encode( $parametri, JSON_UNESCAPED_UNICODE )
 		) );
 
 		if ( is_wp_error( $response ) ) {

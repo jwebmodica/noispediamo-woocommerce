@@ -123,9 +123,9 @@ curl_setopt_array($curl, array(
   CURLOPT_FOLLOWLOCATION => true,
   CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
   CURLOPT_CUSTOMREQUEST => 'POST',
-  CURLOPT_POSTFIELDS => json_encode($parametri),
+  CURLOPT_POSTFIELDS => json_encode($parametri, JSON_UNESCAPED_UNICODE),
   CURLOPT_HTTPHEADER => array(
-    'Content-Type: application/json',
+    'Content-Type: application/json; charset=UTF-8',
     'Authorization: Basic ' . $basicauth
   ),
 ));
