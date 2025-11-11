@@ -220,16 +220,17 @@ class Cspedisci_Connector_Run{
 		}
 
 		// Sanitize destination data
+		// Use wp_unslash to preserve UTF-8 characters (à, è, ì, ò, ù, etc.)
 		$destinatario = array(
-			'nome' => isset( $destinatario_data['nome'] ) ? sanitize_text_field( $destinatario_data['nome'] ) : '',
-			'indirizzo' => isset( $destinatario_data['indirizzo'] ) ? sanitize_text_field( $destinatario_data['indirizzo'] ) : '',
+			'nome' => isset( $destinatario_data['nome'] ) ? wp_unslash( sanitize_text_field( $destinatario_data['nome'] ) ) : '',
+			'indirizzo' => isset( $destinatario_data['indirizzo'] ) ? wp_unslash( sanitize_text_field( $destinatario_data['indirizzo'] ) ) : '',
 			'civico' => isset( $destinatario_data['civico'] ) ? sanitize_text_field( $destinatario_data['civico'] ) : '',
 			'cap' => isset( $destinatario_data['cap'] ) ? sanitize_text_field( $destinatario_data['cap'] ) : '',
-			'citta' => isset( $destinatario_data['citta'] ) ? sanitize_text_field( $destinatario_data['citta'] ) : '',
-			'prov' => isset( $destinatario_data['prov'] ) ? sanitize_text_field( $destinatario_data['prov'] ) : '',
+			'citta' => isset( $destinatario_data['citta'] ) ? wp_unslash( sanitize_text_field( $destinatario_data['citta'] ) ) : '',
+			'prov' => isset( $destinatario_data['prov'] ) ? wp_unslash( sanitize_text_field( $destinatario_data['prov'] ) ) : '',
 			'email' => isset( $destinatario_data['email'] ) ? sanitize_email( $destinatario_data['email'] ) : '',
 			'telefono' => isset( $destinatario_data['telefono'] ) ? sanitize_text_field( $destinatario_data['telefono'] ) : '',
-			'note' => isset( $destinatario_data['note'] ) ? sanitize_textarea_field( $destinatario_data['note'] ) : ''
+			'note' => isset( $destinatario_data['note'] ) ? wp_unslash( sanitize_textarea_field( $destinatario_data['note'] ) ) : ''
 		);
 
 		// Validate required destination fields
@@ -283,28 +284,29 @@ class Cspedisci_Connector_Run{
 		$totale = $order->get_total();
 
 		// Build API parameters using submitted destination data
+		// Ensure proper UTF-8 encoding for all text fields
 		$parametri = array(
 			"mittente" => array(
-				"nome" => $posts->nome,
-				"indirizzo" => $posts->indirizzo,
-				"civico" => $posts->civico,
+				"nome" => mb_convert_encoding( $posts->nome, 'UTF-8', 'UTF-8' ),
+				"indirizzo" => mb_convert_encoding( $posts->indirizzo, 'UTF-8', 'UTF-8' ),
+				"civico" => mb_convert_encoding( $posts->civico, 'UTF-8', 'UTF-8' ),
 				"cap" => $posts->cap,
-				"citta" => $posts->citta,
-				"prov" => $posts->prov,
+				"citta" => mb_convert_encoding( $posts->citta, 'UTF-8', 'UTF-8' ),
+				"prov" => mb_convert_encoding( $posts->prov, 'UTF-8', 'UTF-8' ),
 				"email" => $posts->email,
 				"telefono" => $posts->telefono,
 				"note" => ""
 			),
 			"destinatario" => array(
-				"nome" => $destinatario['nome'],
-				"indirizzo" => $destinatario['indirizzo'],
-				"civico" => $destinatario['civico'],
+				"nome" => mb_convert_encoding( $destinatario['nome'], 'UTF-8', 'UTF-8' ),
+				"indirizzo" => mb_convert_encoding( $destinatario['indirizzo'], 'UTF-8', 'UTF-8' ),
+				"civico" => mb_convert_encoding( $destinatario['civico'], 'UTF-8', 'UTF-8' ),
 				"cap" => $destinatario['cap'],
-				"citta" => $destinatario['citta'],
-				"prov" => $destinatario['prov'],
+				"citta" => mb_convert_encoding( $destinatario['citta'], 'UTF-8', 'UTF-8' ),
+				"prov" => mb_convert_encoding( $destinatario['prov'], 'UTF-8', 'UTF-8' ),
 				"email" => $destinatario['email'],
 				"telefono" => $destinatario['telefono'],
-				"note" => $destinatario['note']
+				"note" => mb_convert_encoding( $destinatario['note'], 'UTF-8', 'UTF-8' )
 			),
 			"ritiro" => $ritiro,
 			"corriere" => $posts->corriere,
