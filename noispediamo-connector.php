@@ -5,13 +5,13 @@
  * @package       CSPEDISCI
  * @author        Jweb
  * @license       gplv2
- * @version       2.0.4
+ * @version       2.0.5
  *
  * @wordpress-plugin
  * Plugin Name:   NoiSpediamo Connector
  * Plugin URI:    https://www.noispediamo.it
  * Description:   Invia i tuoi ordini woocommerce a Noispediamo.it tramite noispediamo-connector
- * Version:       2.0.4
+ * Version:       2.0.5
  * Author:        Jweb
  * Author URI:    https://www.jwebmodica.it
  * Text Domain:   noispediamo-connector
@@ -34,7 +34,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 define( 'CSPEDISCI_NAME',			'NoiSpediamo Connector' );
 
 // Plugin version
-define( 'CSPEDISCI_VERSION',		'2.0.4' );
+define( 'CSPEDISCI_VERSION',		'2.0.5' );
 
 // Plugin Root File
 define( 'CSPEDISCI_PLUGIN_FILE',	__FILE__ );
@@ -228,6 +228,85 @@ function custom_order_status( $order_statuses ) {
 
 
  
+/**
+ * Display pagination controls
+ */
+function noispediamo_render_pagination($current_page, $total_pages, $orders_limit, $filter_order_id = '', $filter_date = '', $position = 'top') {
+    if ($total_pages <= 1) {
+        return;
+    }
+
+    $margin = $position === 'bottom' ? 'margin-top: 20px;' : 'margin-bottom: 20px;';
+    echo '<div style="background: white; border-radius: 8px; padding: 20px; ' . $margin . ' box-shadow: 0 1px 3px rgba(0,0,0,0.1);">';
+    echo '<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">';
+
+    // Page info
+    echo '<div style="font-size: 13px; color: #666;">';
+    echo 'Pagina ' . $current_page . ' di ' . $total_pages;
+    echo '</div>';
+
+    // Pagination buttons
+    echo '<div style="display: flex; gap: 5px; flex-wrap: wrap;">';
+
+    // Build base URL with filters
+    $url_params = array(
+        'page' => 'cspedisci-plugin',
+        'orders_limit' => $orders_limit
+    );
+    if (!empty($filter_order_id)) {
+        $url_params['filter_order_id'] = $filter_order_id;
+    }
+    if (!empty($filter_date)) {
+        $url_params['filter_date'] = $filter_date;
+    }
+    $base_url = add_query_arg($url_params, admin_url('admin.php'));
+
+    // First page button
+    if ($current_page > 1) {
+        echo '<a href="' . esc_url(add_query_arg('paged', 1, $base_url)) . '" class="button" style="padding: 6px 12px;">&laquo; Prima</a>';
+    }
+
+    // Previous page button
+    if ($current_page > 1) {
+        echo '<a href="' . esc_url(add_query_arg('paged', $current_page - 1, $base_url)) . '" class="button" style="padding: 6px 12px;">&lsaquo; Precedente</a>';
+    }
+
+    // Page numbers
+    $range = 2; // Show 2 pages before and after current page
+    $start_page = max(1, $current_page - $range);
+    $end_page = min($total_pages, $current_page + $range);
+
+    if ($start_page > 1) {
+        echo '<span style="padding: 6px 8px; color: #666;">...</span>';
+    }
+
+    for ($i = $start_page; $i <= $end_page; $i++) {
+        if ($i == $current_page) {
+            echo '<span class="button button-primary" style="padding: 6px 12px; cursor: default;">' . $i . '</span>';
+        } else {
+            echo '<a href="' . esc_url(add_query_arg('paged', $i, $base_url)) . '" class="button" style="padding: 6px 12px;">' . $i . '</a>';
+        }
+    }
+
+    if ($end_page < $total_pages) {
+        echo '<span style="padding: 6px 8px; color: #666;">...</span>';
+    }
+
+    // Next page button
+    if ($current_page < $total_pages) {
+        echo '<a href="' . esc_url(add_query_arg('paged', $current_page + 1, $base_url)) . '" class="button" style="padding: 6px 12px;">Successiva &rsaquo;</a>';
+    }
+
+    // Last page button
+    if ($current_page < $total_pages) {
+        echo '<a href="' . esc_url(add_query_arg('paged', $total_pages, $base_url)) . '" class="button" style="padding: 6px 12px;">Ultima &raquo;</a>';
+    }
+
+    echo '</div><!-- End pagination buttons -->';
+    echo '</div><!-- End pagination container -->';
+    echo '</div><!-- End pagination wrapper -->';
+}
+
 function test_init(){
     global $wpdb;
     $table_name = $wpdb->prefix . 'noispediamo_settings';
@@ -255,6 +334,19 @@ function test_init(){
     if (!in_array($orders_limit, $allowed_limits)) {
         $orders_limit = 10;
     }
+
+    // Get current page from GET parameter, default to 1
+    $current_page = isset($_GET['paged']) ? absint($_GET['paged']) : 1;
+    if ($current_page < 1) {
+        $current_page = 1;
+    }
+
+    // Calculate offset
+    $offset = ($current_page - 1) * $orders_limit;
+
+    // Get filter parameters
+    $filter_order_id = isset($_GET['filter_order_id']) ? absint($_GET['filter_order_id']) : '';
+    $filter_date = isset($_GET['filter_date']) ? sanitize_text_field($_GET['filter_date']) : '';
     ?>
 
     <!-- Page Header -->
@@ -293,26 +385,47 @@ function test_init(){
             <h3 style="margin-top: 0; font-size: 14px; display: flex; align-items: center; gap: 5px;">
                 🔍 Filtri Ricerca
             </h3>
-            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                <div style="flex: 1; min-width: 200px;">
-                    <label style="display: block; font-size: 12px; color: #666; margin-bottom: 5px;">Data ordine</label>
-                    <input type="date" id="filter_date" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
-                    <small style="font-size: 11px; color: #999;">Seleziona la data degli ordini</small>
+            <form method="get" action="">
+                <input type="hidden" name="page" value="cspedisci-plugin">
+                <input type="hidden" name="orders_limit" value="<?php echo esc_attr($orders_limit); ?>">
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 5px;">Data ordine</label>
+                        <input type="date" name="filter_date" id="filter_date" value="<?php echo esc_attr($filter_date); ?>" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                        <small style="font-size: 11px; color: #999;">Seleziona la data degli ordini</small>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 5px;">ID Ordine</label>
+                        <input type="text" name="filter_order_id" id="filter_order_id" value="<?php echo esc_attr($filter_order_id); ?>" placeholder="12345" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                        <small style="font-size: 11px; color: #999;">Cerca per numero ordine</small>
+                    </div>
                 </div>
-                <div style="flex: 1; min-width: 200px;">
-                    <label style="display: block; font-size: 12px; color: #666; margin-bottom: 5px;">ID Ordine</label>
-                    <input type="text" id="filter_order_id" placeholder="12345" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
-                    <small style="font-size: 11px; color: #999;">Cerca per numero ordine</small>
+                <div style="margin-top: 15px; display: flex; gap: 10px;">
+                    <button type="submit" class="button button-primary" style="padding: 6px 15px;">Applica Filtri</button>
+                    <a href="?page=cspedisci-plugin&orders_limit=<?php echo esc_attr($orders_limit); ?>" class="button" style="padding: 6px 15px; text-decoration: none;">Cancella Filtri</a>
                 </div>
-            </div>
-            <div style="margin-top: 15px; display: flex; gap: 10px;">
-                <button type="button" class="button button-primary" onclick="applyFilters()" style="padding: 6px 15px;">Applica Filtri</button>
-                <button type="button" class="button" onclick="clearFilters()" style="padding: 6px 15px;">Cancella Filtri</button>
-            </div>
+            </form>
         </div>
     </div>
 
     <?php
+    // Show active filters message
+    if (!empty($filter_order_id) || !empty($filter_date)) {
+        echo '<div style="background: #e7f3ff; border-left: 4px solid #2271b1; padding: 12px 15px; margin-bottom: 20px; border-radius: 4px;">';
+        echo '<strong>🔍 Filtri attivi:</strong> ';
+        $active_filters = array();
+        if (!empty($filter_order_id)) {
+            $active_filters[] = 'ID Ordine: <strong>#' . $filter_order_id . '</strong>';
+        }
+        if (!empty($filter_date)) {
+            $date_formatted = DateTime::createFromFormat('Y-m-d', $filter_date);
+            $active_filters[] = 'Data: <strong>' . $date_formatted->format('d/m/Y') . '</strong>';
+        }
+        echo implode(' | ', $active_filters);
+        echo ' <a href="?page=cspedisci-plugin&orders_limit=' . $orders_limit . '" style="margin-left: 10px; text-decoration: none;">✕ Rimuovi filtri</a>';
+        echo '</div>';
+    }
+
     // Get corrieri from database
     $tablecorrieri = $wpdb->prefix . 'noispediamo_corrieri';
     $corrieri = $wpdb->get_results("SELECT * FROM $tablecorrieri");
@@ -320,14 +433,47 @@ function test_init(){
     // Get default corriere from settings
     $default_corriere = $settings && !empty($settings->corriere) ? $settings->corriere : '';
 
-    $query = new WC_Order_Query( array(
-    'limit' => $orders_limit,
-    'orderby' => 'date',
-    'order' => 'DESC',
-    'return' => 'ids',
-    'status' => 'wc-processing',
-) );
-$orders = $query->get_orders();
+    // Build query args
+    $query_args = array(
+        'orderby' => 'date',
+        'order' => 'DESC',
+        'return' => 'ids',
+        'status' => 'wc-processing',
+    );
+
+    // Apply order ID filter if set
+    if (!empty($filter_order_id)) {
+        $query_args['post__in'] = array($filter_order_id);
+    }
+
+    // Apply date filter if set
+    if (!empty($filter_date)) {
+        // Convert Y-m-d to date range
+        $date_obj = DateTime::createFromFormat('Y-m-d', $filter_date);
+        if ($date_obj) {
+            $query_args['date_created'] = $date_obj->format('Y-m-d');
+        }
+    }
+
+    // Get total count of processing orders for pagination (with filters)
+    $count_query_args = $query_args;
+    $count_query_args['limit'] = -1;
+    $count_query = new WC_Order_Query( $count_query_args );
+    $total_orders = count($count_query->get_orders());
+
+    // Get orders for current page (with filters)
+    $query_args['limit'] = $orders_limit;
+    $query_args['offset'] = $offset;
+    $query = new WC_Order_Query( $query_args );
+    $orders = $query->get_orders();
+
+    // Calculate pagination info
+    $total_pages = ceil($total_orders / $orders_limit);
+    $showing_from = $total_orders > 0 ? $offset + 1 : 0;
+    $showing_to = min($offset + $orders_limit, $total_orders);
+
+    // Display pagination controls at top
+    noispediamo_render_pagination($current_page, $total_pages, $orders_limit, $filter_order_id, $filter_date);
 
 echo '<div class="orders-container">';
 
@@ -336,7 +482,7 @@ if (empty($orders)) {
     echo '<p style="font-size: 16px; color: #666;">📦 Nessun ordine da spedire</p>';
     echo '</div>';
 } else {
-    echo '<div style="margin-bottom: 15px; font-weight: 600;">🚚 Ordini da Spedire (' . count($orders) . ')</div>';
+    echo '<div style="margin-bottom: 15px; font-weight: 600;">🚚 Ordini da Spedire (' . $showing_from . '-' . $showing_to . ' di ' . $total_orders . ')</div>';
     echo '<div style="font-size: 13px; color: #666; margin-bottom: 20px;">Compila i dettagli di spedizione per gli ordini non evasi.</div>';
 }
 
@@ -533,6 +679,9 @@ foreach ($orders as $idordine) {
 }
 
 echo '</div><!-- End orders-container -->';
+
+    // Display pagination controls at bottom
+    noispediamo_render_pagination($current_page, $total_pages, $orders_limit, $filter_order_id, $filter_date, 'bottom');
 }
 
  
